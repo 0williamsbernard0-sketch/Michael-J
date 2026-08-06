@@ -30,7 +30,7 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
-const STORAGE_KEY = "marvics_demo_session";
+const STORAGE_KEY = "mbj_demo_session";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isMember, setIsMember] = useState(false);

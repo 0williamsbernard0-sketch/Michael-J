@@ -35,7 +35,7 @@ export default function DashboardPage() {
         <div className="absolute inset-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/images/mbj-hero.jpg"
+            src="/images/mbj-hero.jpeg"
             alt="MBJ"
             className="w-full h-full object-cover object-top"
           />

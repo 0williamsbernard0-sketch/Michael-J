@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import LockGate from "@/components/LockGate";
+import { useAuth } from "@/lib/auth-context";
+import { useLockModal } from "@/lib/lock-modal-context";
 
 const EXCLUSIVE_CONTENT = [
   { badge: "NEW", duration: "18:40", title: "On the Boards", sub: "Rehearsal Room Footage" },
@@ -51,11 +55,7 @@ export default function DashboardPage() {
               Thank you for being part of the story.
             </p>
             <div className="flex flex-wrap gap-3">
-              <LockGate title="Welcome Message" description="Watch MBJ's welcome message." minHeight="min-h-[54px]">
-                <button className="rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-3 text-sm">
-                  ▶ Take 01 — Watch Welcome Message
-                </button>
-              </LockGate>
+              <WelcomeMessageButton />
               <Link
                 href="/signup"
                 className="rounded-md border border-white/20 px-5 py-3 text-sm hover:border-[#C9A227] transition self-start"
@@ -78,10 +78,10 @@ export default function DashboardPage() {
         </div>
 
         <div className="relative max-w-5xl mx-auto mt-14 grid grid-cols-2 sm:grid-cols-4 gap-6 border-y border-white/10 py-6 text-center">
-          <Stat num="—" label="Society Members" />
-          <Stat num="—" label="Exclusive Videos" />
-          <Stat num="—" label="Live Sessions / Month" />
-          <Stat num="—" label="Fellowship Grants" />
+          <Stat num="1.8M" label="Society Members" />
+          <Stat num="340+" label="Exclusive Videos" />
+          <Stat num="12" label="Live Sessions / Month" />
+          <Stat num="560+" label="Fellowship Grants" />
         </div>
       </section>
 
@@ -170,7 +170,40 @@ export default function DashboardPage() {
           </Link>
         </div>
       </section>
+
+      {/* ---------- FOUNDATION TEASER ---------- */}
+      <section className="px-5 sm:px-10 py-16 max-w-5xl mx-auto">
+        <div className="rounded-lg border border-[#C9A227]/40 bg-gradient-to-br from-[#1A1710] to-[#161A20] p-8">
+          <p className="font-mono text-xs tracking-[0.3em] text-[#C9A227] mb-3">GIVING BACK</p>
+          <h2 className="font-display text-2xl sm:text-3xl mb-2">MBJ Foundation</h2>
+          <div className="font-display text-3xl text-[#C9A227] mb-4">$1.5M+ Raised</div>
+          <p className="text-sm text-[#B8B2A2] max-w-2xl mb-6 leading-relaxed">
+            Every membership contributes directly to the MBJ Foundation and its
+            ongoing community and youth empowerment initiatives.
+          </p>
+          <Link
+            href="/foundation"
+            className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-3 text-sm hover:brightness-110 transition"
+          >
+            Learn More
+          </Link>
+        </div>
+      </section>
     </div>
+  );
+}
+
+function WelcomeMessageButton() {
+  const { isMember } = useAuth();
+  const { openModal } = useLockModal();
+
+  return (
+    <button
+      onClick={isMember ? undefined : openModal}
+      className="flex items-center justify-center gap-2 rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-6 py-3 text-sm hover:brightness-110 transition"
+    >
+      {!isMember && "🔒"} ▶ Watch Welcome Message
+    </button>
   );
 }
 
@@ -191,4 +224,3 @@ function Perk({ main, sub }: { main: string; sub: string }) {
     </div>
   );
 }
-

@@ -175,18 +175,30 @@ export default function DashboardPage() {
       <section className="px-5 sm:px-10 py-16 max-w-5xl mx-auto">
         <div className="rounded-lg border border-[#C9A227]/40 bg-gradient-to-br from-[#1A1710] to-[#161A20] p-8">
           <p className="font-mono text-xs tracking-[0.3em] text-[#C9A227] mb-3">GIVING BACK</p>
-          <h2 className="font-display text-2xl sm:text-3xl mb-2">MBJ Foundation</h2>
-          <div className="font-display text-3xl text-[#C9A227] mb-4">$1.5M+ Raised</div>
+          <h2 className="font-display text-2xl sm:text-3xl mb-4">
+            Outlier Society Fellowship
+          </h2>
           <p className="text-sm text-[#B8B2A2] max-w-2xl mb-6 leading-relaxed">
-            Every membership contributes directly to the MBJ Foundation and its
-            ongoing community and youth empowerment initiatives.
+            A registered 501(c)(3) nonprofit founded by Michael B. Jordan,
+            Outlier Society Fellowship works to elevate diverse voices,
+            preserve authentic perspectives, and create opportunities for
+            underrepresented communities through mentorship, access, and
+            career development in media, arts, and entertainment.
           </p>
-          <Link
-            href="/foundation"
-            className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-3 text-sm hover:brightness-110 transition"
-          >
-            Learn More
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/foundation"
+              className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-3 text-sm hover:brightness-110 transition"
+            >
+              Learn More
+            </Link>
+            <Link
+              href="/foundation/donate"
+              className="inline-block rounded-md border border-white/20 px-5 py-3 text-sm hover:border-[#C9A227] transition"
+            >
+              💛 Donate Now
+            </Link>
+          </div>
         </div>
       </section>
     </div>

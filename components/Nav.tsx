@@ -13,8 +13,10 @@ const NAV_ITEMS = [
   { href: "/craft", label: "The Craft" },
   { href: "/events", label: "Events" },
   { href: "/fellowship", label: "Fellowship" },
+  { href: "/foundation", label: "Foundation" },
   { href: "/merch", label: "Merch" },
 ];
+
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);

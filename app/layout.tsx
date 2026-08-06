@@ -19,7 +19,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "MBJ Society",
-  description: "Official membership community of MBJ.",
+  description: "Official membership community of Michael B Jordan.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

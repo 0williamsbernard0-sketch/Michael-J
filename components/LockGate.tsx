@@ -5,10 +5,12 @@ import { useAuth } from "@/lib/auth-context";
 export default function LockGate({
   children,
   title = "Members Only",
+  description, // accepted for backward-compat with existing call sites; not displayed
   minHeight = "min-h-[260px]",
 }: {
   children: ReactNode;
   title?: string;
+  description?: string;
   minHeight?: string;
 }) {
   const { isMember } = useAuth();

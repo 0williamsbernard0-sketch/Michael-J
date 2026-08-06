@@ -29,61 +29,73 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#12151A] text-[#F1ECDF] font-body">
       <Nav />
 
-      {/* ---------- HERO ---------- */}
-      <section className="relative pt-28 sm:pt-32 pb-16 px-5 sm:px-10 overflow-hidden">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-70"
-          style={{
-            background:
-              "radial-gradient(circle at 70% 20%, rgba(201,162,39,0.14), transparent 55%)",
-          }}
-        />
-        <div className="relative max-w-5xl mx-auto grid sm:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
-          <div>
-            <p className="font-mono text-xs tracking-[0.3em] text-[#1F6F6B] mb-4">
-              WELCOME TO
-            </p>
-            <h1 className="font-display text-5xl sm:text-6xl leading-[1.05] mb-4">
-              The MBJ
-              <br />
-              Society
-            </h1>
-            <p className="text-[#C9A227] italic font-display text-xl mb-4">Michael B. Jordan</p>
-            <p className="text-[#B8B2A2] text-sm sm:text-base mb-8 max-w-md">
-              Actor · Producer · Mentor
-              <br />
-              Thank you for being part of the story.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <WelcomeMessageButton />
-              <Link
-                href="/signup"
-                className="rounded-md border border-white/20 px-5 py-3 text-sm hover:border-[#C9A227] transition self-start"
-              >
-                Join the Society — $100/year
-              </Link>
-            </div>
-          </div>
-
-          <div className="relative aspect-[3/4] rounded-lg overflow-hidden border border-white/10">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/mbj-hero.jpeg" alt="MBJ" className="w-full h-full object-cover" />
-            <div
-              className="absolute inset-0"
-              style={{
-                background: "linear-gradient(180deg, transparent 40%, rgba(18,21,26,0.85) 100%)",
-              }}
-            />
-          </div>
+            {/* ---------- HERO ---------- */}
+      <section className="relative pt-28 sm:pt-32 pb-16 px-5 sm:px-10 overflow-hidden min-h-[640px] flex items-end">
+        {/* Background image */}
+        <div className="absolute inset-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/mbj-hero.jpg"
+            alt="MBJ"
+            className="w-full h-full object-cover object-top"
+          />
+          {/* Gradient: dark on the left/bottom for text legibility, fading to reveal the photo */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(18,21,26,0.97) 0%, rgba(18,21,26,0.88) 35%, rgba(18,21,26,0.35) 65%, rgba(18,21,26,0.05) 100%), linear-gradient(0deg, rgba(18,21,26,0.95) 0%, rgba(18,21,26,0.4) 40%, transparent 70%)",
+            }}
+          />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-70"
+            style={{
+              background:
+                "radial-gradient(circle at 70% 20%, rgba(201,162,39,0.14), transparent 55%)",
+            }}
+          />
         </div>
 
-        <div className="relative max-w-5xl mx-auto mt-14 grid grid-cols-2 sm:grid-cols-4 gap-6 border-y border-white/10 py-6 text-center">
+        {/* Foreground content */}
+        <div className="relative max-w-5xl mx-auto w-full">
+          <p className="font-mono text-xs tracking-[0.3em] text-[#1F6F6B] mb-4">
+            WELCOME TO
+          </p>
+          <h1 className="font-display text-5xl sm:text-6xl leading-[1.05] mb-4">
+            The MBJ
+            <br />
+            Society
+          </h1>
+          <p className="text-[#C9A227] italic font-display text-xl mb-4">
+            Michael B. Jordan
+          </p>
+          <p className="text-[#B8B2A2] text-sm sm:text-base mb-8 max-w-md">
+            Actor · Producer · Mentor
+            <br />
+            Thank you for being part of the story.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <WelcomeMessageButton />
+            <Link
+              href="/signup"
+              className="rounded-md border border-white/30 px-5 py-3 text-sm hover:border-[#C9A227] transition self-start backdrop-blur-sm"
+            >
+              Join the Society — $100/year
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- STATS ---------- */}
+      <section className="px-5 sm:px-10 py-10 border-y border-white/10">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           <Stat num="1.8M" label="Society Members" />
           <Stat num="340+" label="Exclusive Videos" />
           <Stat num="12" label="Live Sessions / Month" />
           <Stat num="560+" label="Fellowship Grants" />
         </div>
       </section>
+
 
       {/* ---------- EXCLUSIVE CONTENT ---------- */}
       <section className="px-5 sm:px-10 py-14 max-w-5xl mx-auto">

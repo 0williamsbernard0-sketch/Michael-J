@@ -1,13 +1,12 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 .font-display {
-  font-family: "Fraunces", serif;
+  font-family: var(--font-display), serif;
 }
 .font-body {
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-body), sans-serif;
 }
 .font-mono {
   font-family: "JetBrains Mono", monospace;

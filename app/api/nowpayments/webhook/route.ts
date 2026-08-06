@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { markPendingApproval } from "@/lib/admin-store";
 
 /**
  * NOWPayments IPN (Instant Payment Notification) webhook.
@@ -10,10 +11,15 @@ import crypto from "crypto";
  * env vars (from the NOWPayments dashboard) to verify authenticity.
  *
  * ⚠️ This is a stub. Before relying on it in production:
- *  - Wire the TODOs below to your actual Supabase `members` table.
+ *  - Wire the TODOs below to your actual Supabase `signups` table (see
+ *    lib/admin-store.ts for the schema this code assumes).
  *  - Confirm you're only granting access on `payment_status === "finished"`
  *    (NOWPayments also sends "waiting", "confirming", "partially_paid",
  *    "failed", etc. — don't grant access on those).
+ *
+ * Payment confirmation does NOT grant login access by itself — it moves
+ * the signup to "pending_approval" so it shows up in /admin for a team
+ * member to approve. Only after approval can the user log in.
  */
 
 function verifySignature(rawBody: string, signatureHeader: string | null, secret: string) {
@@ -39,17 +45,15 @@ export async function POST(req: NextRequest) {
   const { order_id, payment_status } = payload;
 
   if (payment_status === "finished") {
-    // TODO: look up the pending membership by order_id, then:
-    //   - mark it active in your `members` table
-    //   - set expires_at = now + 1 year
-    //   - optionally send a confirmation email
-    // Example (pseudocode):
-    // await supabase.from("members").upsert({
-    //   order_id,
-    //   status: "active",
-    //   plan: "annual",
-    //   expires_at: addYears(new Date(), 1),
-    // });
+    const record = markPendingApproval(order_id);
+
+    // TODO: also persist expires_at = now + 1 year once you're on Supabase,
+    // so approval can set an actual membership expiry rather than just a
+    // boolean approved flag.
+
+    // TODO: notify the admin team now that a signup needs review — e.g.
+    // send an email/Slack message linking to /admin. Something like:
+    // await sendAdminNotification(`New signup pending approval: ${record?.email}`);
   }
 
   // Always respond 200 so NOWPayments doesn't keep retrying once received.

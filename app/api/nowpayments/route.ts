@@ -1,4 +1,4 @@
-mimport { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createAwaitingPayment } from "@/lib/admin-store";
 
 /**
@@ -78,4 +78,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Server error creating invoice." }, { status: 500 });
   }
 }
-

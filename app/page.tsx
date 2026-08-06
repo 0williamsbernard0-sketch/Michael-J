@@ -67,7 +67,7 @@ export default function DashboardPage() {
 
           <div className="relative aspect-[3/4] rounded-lg overflow-hidden border border-white/10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/mbj-hero.jpg" alt="MBJ" className="w-full h-full object-cover" />
+            <img src="/images/mbj-hero.jpeg" alt="MBJ" className="w-full h-full object-cover" />
             <div
               className="absolute inset-0"
               style={{

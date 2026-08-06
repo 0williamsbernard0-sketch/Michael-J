@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+mimport { NextRequest, NextResponse } from "next/server";
+import { createAwaitingPayment } from "@/lib/admin-store";
 
 /**
  * Creates a NOWPayments invoice for the single MBJ Society plan:
@@ -65,9 +66,12 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json();
 
-    // TODO: store { orderId, name, email, status: "pending" } in your DB
-    // (Supabase table, e.g. `pending_memberships`) so the webhook below
-    // can look it up by order_id when payment confirms.
+    // Record the signup as "awaiting_payment" so the webhook can flip it
+    // to "pending_approval" once NOWPayments confirms payment, and so the
+    // admin panel / login route have a record to work with. See the
+    // warning at the top of lib/admin-store.ts before relying on this in
+    // production.
+    createAwaitingPayment(orderId, name, email);
 
     return NextResponse.json({ invoice_url: data.invoice_url, order_id: orderId });
   } catch (err) {

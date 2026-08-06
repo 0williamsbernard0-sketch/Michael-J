@@ -1,8 +1,7 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 
 const NAV_ITEMS = [
@@ -22,9 +21,16 @@ export default function Nav() {
   const pathname = usePathname();
   const { isMember, memberName, logout } = useAuth();
 
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 sm:px-10 py-4 backdrop-blur-md bg-[#12151A]/85 border-b border-white/5">
+      <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 sm:px-10 py-4 bg-[#12151A]/95 backdrop-blur border-b border-white/10">
         <Link href="/" className="font-display tracking-[0.15em] text-lg sm:text-xl">
           MBJ <span className="text-[#C9A227]">SOCIETY</span>
         </Link>
@@ -32,14 +38,14 @@ export default function Nav() {
           {isMember ? (
             <Link
               href="/account"
-              className="rounded-full border border-[#1F6F6B] px-4 py-1.5 text-sm font-medium text-[#1F6F6B] hover:bg-[#1F6F6B] hover:text-[#12151A] transition-colors hidden sm:inline-block"
+              className="rounded-full border border-[#1F6F6B] px-4 py-1.5 text-sm font-medium"
             >
               {memberName ?? "My Account"}
             </Link>
           ) : (
             <Link
               href="/login"
-              className="rounded-full border border-[#C9A227] px-4 py-1.5 text-sm font-medium text-[#C9A227] hover:bg-[#C9A227] hover:text-[#12151A] transition-colors"
+              className="rounded-full border border-[#C9A227] px-4 py-1.5 text-sm font-medium"
             >
               Login
             </Link>
@@ -57,7 +63,7 @@ export default function Nav() {
       </header>
 
       {menuOpen && (
-        <nav className="fixed inset-0 z-50 bg-[#0C0E12]/98 flex flex-col px-8 pt-24">
+        <nav className="fixed inset-0 z-[100] h-[100dvh] w-screen overflow-y-auto bg-[#0C0E12] flex flex-col px-8 pt-24">
           <button
             className="absolute top-5 right-5 text-2xl"
             onClick={() => setMenuOpen(false)}
@@ -82,7 +88,7 @@ export default function Nav() {
               </li>
             ))}
           </ul>
-          <div className="mt-10 pt-6 border-t border-white/10">
+          <div className="mt-10 pt-6 border-t border-white/10 pb-10">
             {isMember ? (
               <button
                 onClick={() => {
@@ -97,7 +103,7 @@ export default function Nav() {
               <Link
                 href="/signup"
                 onClick={() => setMenuOpen(false)}
-                className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-3 text-sm"
+                className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-2.5"
               >
                 Join — $100/year
               </Link>

@@ -48,7 +48,7 @@ export default function DashboardPage() {
               <br />
               Society
             </h1>
-            <p className="text-[#C9A227] italic font-display text-xl mb-4">MBJ</p>
+            <p className="text-[#C9A227] italic font-display text-xl mb-4">Michael B. Jordan</p>
             <p className="text-[#B8B2A2] text-sm sm:text-base mb-8 max-w-md">
               Actor · Producer · Mentor
               <br />

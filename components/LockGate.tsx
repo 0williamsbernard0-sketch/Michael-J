@@ -1,18 +1,14 @@
 "use client";
-
-import Link from "next/link";
 import { ReactNode } from "react";
 import { useAuth } from "@/lib/auth-context";
 
 export default function LockGate({
   children,
   title = "Members Only",
-  description = "This is exclusive to MBJ Society members.",
   minHeight = "min-h-[260px]",
 }: {
   children: ReactNode;
   title?: string;
-  description?: string;
   minHeight?: string;
 }) {
   const { isMember } = useAuth();
@@ -25,24 +21,20 @@ export default function LockGate({
         {children}
       </div>
       <div className="absolute inset-0 flex items-center justify-center bg-[#0C0E12]/80">
-        <div className="text-center px-6 py-8">
-          <div className="text-3xl mb-3">🔒</div>
-          <h3 className="font-display text-lg mb-2">{title}</h3>
-          <p className="text-sm text-[#B8B2A2] mb-5 max-w-xs mx-auto">{description}</p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <Link
-              href="/signup"
-              className="rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-2.5 text-sm hover:brightness-110 transition"
-            >
-              Join — $100/year
-            </Link>
-            <Link
-              href="/login"
-              className="rounded-md border border-white/20 px-5 py-2.5 text-sm hover:border-[#C9A227] transition"
-            >
-              Login
-            </Link>
-          </div>
+        <div className="text-center px-6">
+          <svg
+            className="mx-auto mb-3 h-7 w-7 text-[#C9A227]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <rect x="4" y="10" width="16" height="10" rx="2" />
+            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+          </svg>
+          <p className="font-display text-sm tracking-[0.15em] uppercase text-[#C9A227]">
+            {title}
+          </p>
         </div>
       </div>
     </div>

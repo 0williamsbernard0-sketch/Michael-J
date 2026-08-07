@@ -4,11 +4,21 @@
 
 .font-display {
   font-family: var(--font-display), serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 .font-body {
   font-family: var(--font-body), sans-serif;
+  font-weight: 500;
 }
 .font-mono {
   font-family: "JetBrains Mono", monospace;
 }
 
+/* Large hero/section headlines can bump to bolder weight and tighter
+   tracking for that commanding, cinematic feel — apply alongside
+   font-display, e.g. className="font-display font-extrabold" */
+.font-display.font-extrabold {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}

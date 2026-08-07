@@ -1,5 +1,6 @@
 import Nav from "@/components/Nav";
 import LockGate from "@/components/LockGate";
+import ActivityLockGate from "@/components/ActivityLockGate";
 
 export default function CommunityPage() {
   return (
@@ -16,11 +17,17 @@ export default function CommunityPage() {
           description="Discussions are open to MBJ Society members only."
           minHeight="min-h-[320px]"
         >
-          <div className="rounded-lg border border-white/10 bg-[#161A20] p-6 space-y-5">
-            <ForumPost initials="JM" name="JanelleM" text="Anyone catch the rehearsal footage?" meta="2 hrs ago · 42 replies" />
-            <ForumPost initials="KL" name="KeithL" text="The Fellowship info session was incredible" meta="5 hrs ago · 19 replies" />
-            <ForumPost initials="TS" name="TamaraS" text="Who's going to the fan meet-up?" meta="8 hrs ago · 61 replies" />
-          </div>
+          <ActivityLockGate
+            title="Unlocking Soon"
+            description="Community access opens automatically as you stay active on the platform. The MBJ team reviews activity periodically — no action needed on your end."
+            minHeight="min-h-[320px]"
+          >
+            <div className="rounded-lg border border-white/10 bg-[#161A20] p-6 space-y-5">
+              <ForumPost initials="JM" name="JanelleM" text="Anyone catch the rehearsal footage?" meta="2 hrs ago · 42 replies" />
+              <ForumPost initials="KL" name="KeithL" text="The Fellowship info session was incredible" meta="5 hrs ago · 19 replies" />
+              <ForumPost initials="TS" name="TamaraS" text="Who's going to the fan meet-up?" meta="8 hrs ago · 61 replies" />
+            </div>
+          </ActivityLockGate>
         </LockGate>
       </main>
     </div>
@@ -40,4 +47,3 @@ function ForumPost({ initials, name, text, meta }: { initials: string; name: str
     </div>
   );
 }
-

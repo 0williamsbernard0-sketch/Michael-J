@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   const { order_id, payment_status } = payload;
 
   if (payment_status === "finished") {
-    const record = markPendingApproval(order_id);
+  const record = await markPendingApproval(order_id);
 
     // TODO: also persist expires_at = now + 1 year once you're on Supabase,
     // so approval can set an actual membership expiry rather than just a

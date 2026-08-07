@@ -46,15 +46,18 @@ export async function POST(req: NextRequest) {
 
   if (payment_status === "finished") {
   const record = await markPendingApproval(order_id);
-
-    // TODO: also persist expires_at = now + 1 year once you're on Supabase,
-    // so approval can set an actual membership expiry rather than just a
-    // boolean approved flag.
-
-    // TODO: notify the admin team now that a signup needs review — e.g.
-    // send an email/Slack message linking to /admin. Something like:
-    // await sendAdminNotification(`New signup pending approval: ${record?.email}`);
+  // TODO: also persist expires_at = now + 1 year once you're on Supabase,
+  // so approval can set an actual membership expiry rather than just a
+  // boolean approved flag.
+  if (record) {
+    await sendAdminSignupNotification({
+      name: record.name,
+      email: record.email,
+      orderId: record.id,
+    });
   }
+}
+
 
   // Always respond 200 so NOWPayments doesn't keep retrying once received.
   return NextResponse.json({ received: true });

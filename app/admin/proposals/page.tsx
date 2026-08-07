@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import Nav from "@/components/Nav";
 
 interface Proposal {
@@ -52,16 +53,27 @@ export default function AdminProposalsPage() {
       if (!res.ok) {
         setError(data.error ?? "Couldn't load proposals.");
         setUnlocked(false);
+        sessionStorage.removeItem("mbj_admin_secret");
         return;
       }
       setProposals(data.proposals);
       setUnlocked(true);
+      sessionStorage.setItem("mbj_admin_secret", secretValue);
     } catch {
       setError("Network error — please try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("mbj_admin_secret");
+    if (saved) {
+      setSecret(saved);
+      fetchProposals(saved);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +146,18 @@ export default function AdminProposalsPage() {
     <div className="min-h-screen bg-[#12151A] text-[#F1ECDF] font-body">
       <Nav />
       <main className="pt-28 pb-20 px-5 sm:px-10 max-w-3xl mx-auto">
+        <div className="flex items-center gap-6 mb-8 border-b border-white/10">
+          <Link
+            href="/admin"
+            className="text-sm text-[#B8B2A2] hover:text-[#C9A227] pb-3 transition"
+          >
+            Signups
+          </Link>
+          <span className="text-sm font-semibold pb-3 border-b-2 border-[#C9A227] text-[#C9A227]">
+            Fellowship Proposals
+          </span>
+        </div>
+
         <div className="flex items-center justify-between mb-8">
           <h1 className="font-display text-3xl">Fellowship Proposals</h1>
           <button

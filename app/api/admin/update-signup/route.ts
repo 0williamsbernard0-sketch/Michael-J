@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "id and action are required." }, { status: 400 });
     }
 
-    const record = action === "approve" ? approveSignup(id) : rejectSignup(id);
+    const record = action === "approve" ? await approveSignup(id) : await rejectSignup(id);
 
     if (!record) {
       return NextResponse.json({ error: "Signup not found." }, { status: 404 });

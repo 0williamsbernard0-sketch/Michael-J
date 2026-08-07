@@ -28,7 +28,7 @@ export default function AccountPage() {
               <p className="text-sm">MBJ Society — Annual — $100/year</p>
             </div>
             <button
-              onClick={logout}
+  onClick={() => void logout()}
               className="rounded-md border border-white/20 px-5 py-2.5 text-sm hover:border-[#C9A227] transition"
             >
               Sign out

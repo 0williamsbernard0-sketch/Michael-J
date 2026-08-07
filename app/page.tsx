@@ -29,9 +29,8 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#12151A] text-[#F1ECDF] font-body">
       <Nav />
 
-            {/* ---------- HERO ---------- */}
-      <section className="relative pt-28 sm:pt-32 pb-16 px-5 sm:px-10 overflow-hidden min-h-[640px] flex items-end">
-        {/* Background image */}
+      {/* ---------- HERO ---------- */}
+      <section className="relative pt-28 sm:pt-32 pb-20 px-5 sm:px-10 overflow-hidden min-h-[680px] flex items-end">
         <div className="absolute inset-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -39,7 +38,6 @@ export default function DashboardPage() {
             alt="MBJ"
             className="w-full h-full object-cover object-top"
           />
-          {/* Gradient: dark on the left/bottom for text legibility, fading to reveal the photo */}
           <div
             className="absolute inset-0"
             style={{
@@ -56,29 +54,30 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Foreground content */}
         <div className="relative max-w-5xl mx-auto w-full">
-          <p className="font-mono text-xs tracking-[0.3em] text-[#1F6F6B] mb-4">
-            WELCOME TO
+          <p className="font-body text-[11px] font-semibold uppercase tracking-[0.4em] text-[#1F6F6B] mb-5">
+            Welcome to
           </p>
-          <h1 className="font-display text-5xl sm:text-6xl leading-[1.05] mb-4">
+          <h1 className="font-display font-extrabold text-6xl sm:text-7xl leading-[0.98] mb-5">
             The MBJ
             <br />
             Society
           </h1>
-          <p className="text-[#C9A227] italic font-display text-xl mb-4">
+          <p className="text-[#C9A227] italic font-display font-medium text-xl tracking-wide mb-4">
             Michael B. Jordan
           </p>
-          <p className="text-[#B8B2A2] text-sm sm:text-base mb-8 max-w-md">
+          <p className="text-[#B8B2A2] font-body text-xs uppercase tracking-[0.15em] mb-10 max-w-md">
             Actor · Producer · Mentor
             <br />
-            Thank you for being part of the story.
+            <span className="normal-case tracking-normal text-sm block mt-2">
+              Thank you for being part of the story.
+            </span>
           </p>
           <div className="flex flex-wrap gap-3">
             <WelcomeMessageButton />
             <Link
               href="/signup"
-              className="rounded-md border border-white/30 px-5 py-3 text-sm hover:border-[#C9A227] transition self-start backdrop-blur-sm"
+              className="flex items-center rounded-md border border-white/30 px-6 py-3.5 text-xs font-semibold uppercase tracking-wider hover:border-[#C9A227] transition self-start backdrop-blur-sm"
             >
               Join the Society — $100/year
             </Link>
@@ -87,8 +86,8 @@ export default function DashboardPage() {
       </section>
 
       {/* ---------- STATS ---------- */}
-      <section className="px-5 sm:px-10 py-10 border-y border-white/10">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+      <section className="px-5 sm:px-10 py-12 border-y border-white/10">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
           <Stat num="1.8M" label="Society Members" />
           <Stat num="340+" label="Exclusive Videos" />
           <Stat num="12" label="Live Sessions / Month" />
@@ -96,12 +95,16 @@ export default function DashboardPage() {
         </div>
       </section>
 
-
       {/* ---------- EXCLUSIVE CONTENT ---------- */}
-      <section className="px-5 sm:px-10 py-14 max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl sm:text-3xl">Exclusive Content</h2>
-          <Link href="/videos" className="text-[#C9A227] text-sm">
+      <section className="px-5 sm:px-10 py-16 max-w-5xl mx-auto">
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <p className="font-body text-[11px] font-semibold uppercase tracking-[0.35em] text-[#B8B2A2] mb-2">
+              Members Only
+            </p>
+            <h2 className="font-display font-semibold text-3xl sm:text-4xl">Exclusive Content</h2>
+          </div>
+          <Link href="/videos" className="text-[#C9A227] text-xs font-semibold uppercase tracking-wider">
             View All →
           </Link>
         </div>
@@ -124,12 +127,15 @@ export default function DashboardPage() {
       </section>
 
       {/* ---------- BENEFITS + PERKS ---------- */}
-      <section className="px-5 sm:px-10 py-14 max-w-5xl mx-auto grid sm:grid-cols-2 gap-8">
-        <div className="rounded-lg border border-white/10 p-6 bg-[#161A20]">
-          <h3 className="font-display text-xl text-[#C9A227] mb-5">Membership Benefits</h3>
-          <ul className="space-y-3 mb-6">
+      <section className="px-5 sm:px-10 py-16 max-w-5xl mx-auto grid sm:grid-cols-2 gap-8">
+        <div className="rounded-lg border border-white/10 p-8 bg-[#161A20]">
+          <p className="font-body text-[11px] font-semibold uppercase tracking-[0.35em] text-[#C9A227] mb-2">
+            Included
+          </p>
+          <h3 className="font-display font-semibold text-2xl mb-6">Membership Benefits</h3>
+          <ul className="space-y-3.5 mb-8">
             {BENEFITS.map((b) => (
-              <li key={b} className="flex items-start gap-2 text-sm">
+              <li key={b} className="flex items-start gap-3 text-sm">
                 <span className="text-[#1F6F6B] mt-0.5">✓</span>
                 {b}
               </li>
@@ -137,15 +143,18 @@ export default function DashboardPage() {
           </ul>
           <Link
             href="/signup"
-            className="block text-center w-full rounded-md bg-[#C9A227] text-[#12151A] font-semibold py-3 text-sm hover:brightness-110 transition"
+            className="block text-center w-full rounded-md bg-[#C9A227] text-[#12151A] font-semibold uppercase tracking-wider text-xs py-3.5 hover:brightness-110 transition"
           >
             Join — $100/year
           </Link>
         </div>
 
-        <div className="rounded-lg border border-white/10 p-6 bg-[#161A20]">
-          <h3 className="font-display text-xl text-[#C9A227] mb-5">Your Perks</h3>
-          <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="rounded-lg border border-white/10 p-8 bg-[#161A20]">
+          <p className="font-body text-[11px] font-semibold uppercase tracking-[0.35em] text-[#C9A227] mb-2">
+            Member Status
+          </p>
+          <h3 className="font-display font-semibold text-2xl mb-6">Your Perks</h3>
+          <div className="grid grid-cols-2 gap-4 mb-8">
             <Perk main="MEMBER DISCOUNT" sub="On appearances" />
             <Perk main="EARLY ACCESS" sub="New releases" />
             <Perk main="LIVE ACCESS" sub="All sessions" />
@@ -153,7 +162,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/signup"
-            className="block text-center w-full rounded-md border border-white/20 py-3 text-sm hover:border-[#C9A227] transition"
+            className="block text-center w-full rounded-md border border-white/20 py-3.5 text-xs font-semibold uppercase tracking-wider hover:border-[#C9A227] transition"
           >
             Get Access
           </Link>
@@ -162,12 +171,14 @@ export default function DashboardPage() {
 
       {/* ---------- FELLOWSHIP TEASER ---------- */}
       <section className="px-5 sm:px-10 py-16 max-w-5xl mx-auto">
-        <div className="rounded-lg border border-[#5C1B24]/50 bg-gradient-to-br from-[#1A1416] to-[#161A20] p-8">
-          <p className="font-mono text-xs tracking-[0.3em] text-[#1F6F6B] mb-3">GIVING BACK</p>
-          <h2 className="font-display text-2xl sm:text-3xl mb-4">
+        <div className="rounded-lg border border-[#5C1B24]/50 bg-gradient-to-br from-[#1A1416] to-[#161A20] p-8 sm:p-10">
+          <p className="font-body text-[11px] font-semibold uppercase tracking-[0.4em] text-[#1F6F6B] mb-4">
+            Giving Back
+          </p>
+          <h2 className="font-display font-semibold text-3xl sm:text-4xl mb-5">
             MBJ Signature Society Fellowship
           </h2>
-          <p className="text-sm text-[#B8B2A2] max-w-2xl mb-6 leading-relaxed">
+          <p className="text-sm text-[#B8B2A2] max-w-2xl mb-8 leading-relaxed">
             Founded through MBJ&rsquo;s production company, the Fellowship
             provides paid internships, mentorship, and career pathways for
             underrepresented young people pursuing careers in media, film,
@@ -176,7 +187,7 @@ export default function DashboardPage() {
           </p>
           <Link
             href="/fellowship"
-            className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-3 text-sm hover:brightness-110 transition"
+            className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold uppercase tracking-wider text-xs px-6 py-3.5 hover:brightness-110 transition"
           >
             Learn More & Apply
           </Link>
@@ -185,12 +196,14 @@ export default function DashboardPage() {
 
       {/* ---------- FOUNDATION TEASER ---------- */}
       <section className="px-5 sm:px-10 py-16 max-w-5xl mx-auto">
-        <div className="rounded-lg border border-[#C9A227]/40 bg-gradient-to-br from-[#1A1710] to-[#161A20] p-8">
-          <p className="font-mono text-xs tracking-[0.3em] text-[#C9A227] mb-3">GIVING BACK</p>
-          <h2 className="font-display text-2xl sm:text-3xl mb-4">
+        <div className="rounded-lg border border-[#C9A227]/40 bg-gradient-to-br from-[#1A1710] to-[#161A20] p-8 sm:p-10">
+          <p className="font-body text-[11px] font-semibold uppercase tracking-[0.4em] text-[#C9A227] mb-4">
+            Giving Back
+          </p>
+          <h2 className="font-display font-semibold text-3xl sm:text-4xl mb-5">
             Outlier Society Fellowship
           </h2>
-          <p className="text-sm text-[#B8B2A2] max-w-2xl mb-6 leading-relaxed">
+          <p className="text-sm text-[#B8B2A2] max-w-2xl mb-8 leading-relaxed">
             A registered 501(c)(3) nonprofit founded by Michael B. Jordan,
             Outlier Society Fellowship works to elevate diverse voices,
             preserve authentic perspectives, and create opportunities for
@@ -200,13 +213,13 @@ export default function DashboardPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/foundation"
-              className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-3 text-sm hover:brightness-110 transition"
+              className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold uppercase tracking-wider text-xs px-6 py-3.5 hover:brightness-110 transition"
             >
               Learn More
             </Link>
             <Link
               href="/foundation/donate"
-              className="inline-block rounded-md border border-white/20 px-5 py-3 text-sm hover:border-[#C9A227] transition"
+              className="inline-block rounded-md border border-white/20 px-6 py-3.5 text-xs font-semibold uppercase tracking-wider hover:border-[#C9A227] transition"
             >
               💛 Donate Now
             </Link>
@@ -224,7 +237,7 @@ function WelcomeMessageButton() {
   return (
     <button
       onClick={isMember ? undefined : openModal}
-      className="flex items-center justify-center gap-2 rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-6 py-3 text-sm hover:brightness-110 transition"
+      className="flex items-center justify-center gap-2 rounded-md bg-[#C9A227] text-[#12151A] font-semibold uppercase tracking-wider text-xs px-7 py-3.5 hover:brightness-110 transition"
     >
       {!isMember && "🔒"} ▶ Watch Welcome Message
     </button>
@@ -234,8 +247,10 @@ function WelcomeMessageButton() {
 function Stat({ num, label }: { num: string; label: string }) {
   return (
     <div>
-      <div className="font-display text-2xl sm:text-3xl text-[#C9A227]">{num}</div>
-      <div className="text-[10px] sm:text-xs tracking-wide text-[#B8B2A2] mt-1">{label}</div>
+      <div className="font-display font-extrabold text-3xl sm:text-4xl text-[#C9A227]">{num}</div>
+      <div className="text-[10px] sm:text-[11px] uppercase tracking-widest text-[#B8B2A2] mt-2">
+        {label}
+      </div>
     </div>
   );
 }
@@ -243,7 +258,7 @@ function Stat({ num, label }: { num: string; label: string }) {
 function Perk({ main, sub }: { main: string; sub: string }) {
   return (
     <div className="rounded-md border border-white/10 p-4 text-center">
-      <div className="text-xs font-semibold tracking-wide">{main}</div>
+      <div className="text-xs font-semibold uppercase tracking-wider">{main}</div>
       <div className="text-[11px] text-[#C9A227] mt-1">{sub}</div>
     </div>
   );

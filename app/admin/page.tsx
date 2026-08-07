@@ -78,7 +78,7 @@ export default function AdminPage() {
             <form onSubmit={handleUnlock} className="space-y-4">
               <input
                 type="password"
-                value={9488}
+                value={secret}
                 onChange={(e) => setSecret(e.target.value)}
                 placeholder="Admin key"
                 className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm outline-none focus:border-[#C9A227]"

@@ -9,6 +9,8 @@ import { getSupabaseAdmin } from "@/lib/supabase";
  *     name text not null,
  *     email text not null,
  *     status text not null default 'awaiting_payment',
+ *     expires_at timestamptz,           -- set to now() + 1 year on approval
+ *     coupon_balance integer not null default 0,
  *     created_at timestamptz default now()
  *   );
  *
@@ -134,11 +136,19 @@ export async function listPendingSignups(): Promise<SignupRecord[]> {
   return data.map(toSignupRecord);
 }
 
+/**
+ * Approving a signup now also grants exactly one year of active
+ * membership from this moment — expires_at drives both the coupon
+ * system (lib/coupon-store.ts) and any future renewal logic.
+ */
 export async function approveSignup(id: string) {
   const supabase = getSupabaseAdmin();
+  const expiresAt = new Date();
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
   const { data, error } = await supabase
     .from("signups")
-    .update({ status: "approved" })
+    .update({ status: "approved", expires_at: expiresAt.toISOString() })
     .eq("id", id)
     .select()
     .single();

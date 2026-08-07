@@ -17,7 +17,6 @@ const NAV_ITEMS = [
   { href: "/merch", label: "Merch" },
 ];
 
-
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -33,21 +32,21 @@ export default function Nav() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 sm:px-10 py-4 bg-[#12151A]/95 backdrop-blur border-b border-white/10">
-        <Link href="/" className="font-display tracking-[0.15em] text-lg sm:text-xl">
+        <Link href="/" className="font-display font-semibold tracking-[0.2em] text-lg sm:text-xl">
           MBJ <span className="text-[#C9A227]">SOCIETY</span>
         </Link>
         <div className="flex items-center gap-3">
           {isMember ? (
             <Link
               href="/account"
-              className="rounded-full border border-[#1F6F6B] px-4 py-1.5 text-sm font-medium"
+              className="rounded-full border border-[#1F6F6B] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider"
             >
               {memberName ?? "My Account"}
             </Link>
           ) : (
             <Link
               href="/login"
-              className="rounded-full border border-[#C9A227] px-4 py-1.5 text-sm font-medium"
+              className="rounded-full border border-[#C9A227] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider"
             >
               Login
             </Link>
@@ -57,9 +56,9 @@ export default function Nav() {
             onClick={() => setMenuOpen((v) => !v)}
             className="flex flex-col gap-1.5 p-2"
           >
-            <span className="block h-[2px] w-6 bg-[#F1ECDF]" />
-            <span className="block h-[2px] w-6 bg-[#F1ECDF]" />
-            <span className="block h-[2px] w-6 bg-[#F1ECDF]" />
+            <span className="block h-[1.5px] w-6 bg-[#F1ECDF]" />
+            <span className="block h-[1.5px] w-6 bg-[#F1ECDF]" />
+            <span className="block h-[1.5px] w-6 bg-[#F1ECDF]" />
           </button>
         </div>
       </header>
@@ -73,31 +72,41 @@ export default function Nav() {
           >
             ✕
           </button>
-          <ul className="flex flex-col gap-6 font-display text-2xl">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.href}>
+
+          <p className="font-body text-[11px] uppercase tracking-[0.35em] text-[#B8B2A2] mb-6">
+            Menu
+          </p>
+
+          <ul className="flex flex-col">
+            {NAV_ITEMS.map((item, i) => (
+              <li key={item.href} className="border-b border-white/10">
                 <Link
                   href={item.href}
                   onClick={() => setMenuOpen(false)}
                   className={
-                    pathname === item.href
+                    "flex items-baseline gap-4 py-4 font-display font-semibold text-2xl transition-colors " +
+                    (pathname === item.href
                       ? "text-[#C9A227]"
-                      : "hover:text-[#C9A227] transition-colors"
+                      : "text-[#F1ECDF] hover:text-[#C9A227]")
                   }
                 >
+                  <span className="font-body text-[11px] text-[#B8B2A2] tracking-wider">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
                   {item.label}
                 </Link>
               </li>
             ))}
           </ul>
+
           <div className="mt-10 pt-6 border-t border-white/10 pb-10">
             {isMember ? (
               <button
                 onClick={async () => {
-  await logout();
-  setMenuOpen(false);
-}}
-                className="text-sm text-[#B8B2A2]"
+                  await logout();
+                  setMenuOpen(false);
+                }}
+                className="text-xs uppercase tracking-wider text-[#B8B2A2] font-semibold"
               >
                 Sign out
               </button>
@@ -105,7 +114,7 @@ export default function Nav() {
               <Link
                 href="/signup"
                 onClick={() => setMenuOpen(false)}
-                className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-2.5"
+                className="inline-block rounded-md bg-[#C9A227] text-[#12151A] font-semibold uppercase tracking-wider text-xs px-6 py-3.5"
               >
                 Join — $100/year
               </Link>

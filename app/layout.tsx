@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import { LockModalProvider } from "@/lib/lock-modal-context";
@@ -23,6 +23,14 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "MBJ Society",
   description: "Official membership community of MBJ.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 0.85,
+  minimumScale: 0.85,
+  maximumScale: 0.85,
+  userScalable: false,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

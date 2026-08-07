@@ -11,6 +11,16 @@ interface SignupRecord {
   createdAt: string;
 }
 
+const statusStyles: Record<string, string> = {
+  awaiting_payment: "text-[#B8B2A2] border-white/20",
+  waiting: "text-[#B8B2A2] border-white/20",
+  confirming: "text-[#C9A227] border-[#C9A227]/40",
+  partially_paid: "text-[#E0A83B] border-[#E0A83B]/40",
+  pending_approval: "text-[#7BC96F] border-[#7BC96F]/40",
+  failed: "text-[#E0716B] border-[#E0716B]/40",
+  expired: "text-[#E0716B] border-[#E0716B]/40",
+};
+
 export default function AdminPage() {
   const [secret, setSecret] = useState("");
   const [unlocked, setUnlocked] = useState(false);
@@ -122,10 +132,19 @@ export default function AdminPage() {
                 className="rounded-lg border border-white/10 bg-[#161A20] p-4 flex items-center justify-between gap-4"
               >
                 <div>
-                  <p className="text-sm font-semibold">{s.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold">{s.name}</p>
+                    <span
+                      className={`text-[10px] uppercase tracking-wide border rounded px-1.5 py-0.5 ${
+                        statusStyles[s.status] ?? "text-[#B8B2A2] border-white/20"
+                      }`}
+                    >
+                      {s.status.replace(/_/g, " ")}
+                    </span>
+                  </div>
                   <p className="text-xs text-[#B8B2A2]">{s.email}</p>
                   <p className="text-[10px] text-[#B8B2A2] mt-1">
-                    Paid {new Date(s.createdAt).toLocaleString()}
+                    Started {new Date(s.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -152,4 +171,3 @@ export default function AdminPage() {
     </div>
   );
 }
-

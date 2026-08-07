@@ -4,13 +4,17 @@ import { findLatestSignupByEmail } from "@/lib/admin-store";
 /**
  * Checks a signup's approval status by email before allowing login.
  *
- * ⚠️ Password is accepted but NOT verified here — there's no real user
- * auth wired up yet. Replace this whole route with
- * supabase.auth.signInWithPassword() once Supabase Auth is in place, and
- * keep the approval check (status === "approved") as an additional guard
- * layered on top of real auth, not a replacement for it.
+ * This route does NOT verify the password — verification happens
+ * client-side via supabase.auth.signInWithPassword() in
+ * app/login/page.tsx, AFTER this route confirms the signup is
+ * approved. That ordering matters: we check approval first so a
+ * pending or rejected user never even attempts a real Supabase
+ * sign-in, and instead sees the correct pending/rejected message.
+ *
+ * The approval check is layered on top of real auth, not a
+ * replacement for it — Supabase Auth still owns the actual password
+ * verification.
  */
-
 export async function POST(req: NextRequest) {
   try {
     const { email } = (await req.json()) as { email: string; password: string };
@@ -30,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     if (record.status === "awaiting_payment") {
       return NextResponse.json(
-        { error: "We haven't received your payment yet. If you already paid, this can take a few minutes to confirm." },
+        { error: "We haven't received your payment yet. If you already paid, this can take a few minutes." },
         { status: 403 }
       );
     }
@@ -46,10 +50,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // status === "approved"
+    // status === "approved" — clear to attempt real Supabase sign-in client-side.
     return NextResponse.json({ status: "approved", name: record.name, email: record.email });
   } catch (err) {
     return NextResponse.json({ error: "Server error checking account status." }, { status: 500 });
   }
 }
-

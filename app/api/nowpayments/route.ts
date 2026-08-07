@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     // admin panel / login route have a record to work with. See the
     // warning at the top of lib/admin-store.ts before relying on this in
     // production.
-    createAwaitingPayment(orderId, name, email);
+    await createAwaitingPayment(orderId, name, email);
 
     return NextResponse.json({ invoice_url: data.invoice_url, order_id: orderId });
   } catch (err) {

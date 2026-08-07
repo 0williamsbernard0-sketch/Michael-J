@@ -1,24 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-
-/**
- * Receives financial-aid proposal submissions from members.
- *
- * This is a stub — wire it to your real storage/review workflow:
- *   - Insert into a Supabase table, e.g. `fellowship_proposals`
- *     (fullName, email, phone, area, amountRequested, reason, memberId,
- *     status: "pending", submittedAt).
- *   - Optionally notify the Fellowship review team (email/Slack) so
- *     nothing sits unseen.
- *   - Since this collects sensitive personal/financial context, make
- *     sure the table has restrictive row-level security — proposals
- *     should only be readable by whoever actually reviews them, not by
- *     other members.
- */
+import { createProposal } from "@/lib/fellowship-store";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { fullName, email, reason } = body;
+    const { fullName, email, phone, area, amountRequested, reason } = body;
 
     if (!fullName || !email || !reason) {
       return NextResponse.json(
@@ -27,17 +13,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // TODO: replace with real persistence, e.g.:
-    // const { error } = await supabase.from("fellowship_proposals").insert({
-    //   ...body,
-    //   status: "pending",
-    //   submitted_at: new Date().toISOString(),
-    // });
-    // if (error) throw error;
+    const record = await createProposal({ fullName, email, phone, area, amountRequested, reason });
+    if (!record) {
+      return NextResponse.json({ error: "Couldn't save proposal." }, { status: 500 });
+    }
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ received: true, id: record.id });
   } catch {
     return NextResponse.json({ error: "Server error submitting proposal." }, { status: 500 });
   }
 }
-

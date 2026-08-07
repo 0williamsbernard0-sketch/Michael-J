@@ -1,3 +1,4 @@
+import { sendAdminSignupNotification } from "@/lib/email";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { markPendingApproval } from "@/lib/admin-store";

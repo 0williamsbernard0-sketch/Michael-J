@@ -1,8 +1,8 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 /**
- * Signup data store — now backed by the Supabase `signups` table
- * instead of an in-memory Map. Table schema:
+ * Signup data store — backed by the Supabase `signups` table.
+ * Table schema:
  *
  *   create table signups (
  *     id text primary key,              -- the NOWPayments order_id
@@ -16,13 +16,18 @@ import { getSupabaseAdmin } from "@/lib/supabase";
  * through the service-role client (getSupabaseAdmin), which bypasses
  * RLS. That's why this file must only ever be imported from server
  * code (API routes) — never from a "use client" component.
- *
- * All functions are now async, unlike the old in-memory version.
- * Every caller has been updated to await them — see the API routes
- * in app/api/nowpayments/, app/api/auth/login/, and app/api/admin/.
  */
 
-export type SignupStatus = "awaiting_payment" | "pending_approval" | "approved" | "rejected";
+export type SignupStatus =
+  | "awaiting_payment"
+  | "waiting"
+  | "confirming"
+  | "partially_paid"
+  | "pending_approval"
+  | "failed"
+  | "expired"
+  | "approved"
+  | "rejected";
 
 export interface SignupRecord {
   id: string;
@@ -66,30 +71,60 @@ export async function createAwaitingPayment(id: string, name: string, email: str
   return toSignupRecord(data);
 }
 
-/** Called by the NOWPayments webhook when payment_status === "finished". */
-export async function markPendingApproval(id: string) {
+/**
+ * Called by the webhook on EVERY IPN callback, for every payment status
+ * (waiting, confirming, partially_paid, finished, failed, expired).
+ * Won't clobber a decision an admin already made (approved/rejected) —
+ * once you've acted on a signup, late or duplicate IPNs can't reopen it.
+ *
+ * Returns `changed: true` only when the status actually moved, so the
+ * webhook can avoid re-sending admin notification emails on retries.
+ */
+export async function upsertSignupStatus(id: string, newStatus: SignupStatus) {
   const supabase = getSupabaseAdmin();
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("signups")
+    .select()
+    .eq("id", id)
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error("upsertSignupStatus fetch failed:", fetchError);
+    return { record: null as SignupRecord | null, changed: false };
+  }
+  if (!existing) {
+    console.error("upsertSignupStatus: no signup row for id", id);
+    return { record: null as SignupRecord | null, changed: false };
+  }
+  if (existing.status === "approved" || existing.status === "rejected") {
+    return { record: toSignupRecord(existing), changed: false };
+  }
+  if (existing.status === newStatus) {
+    return { record: toSignupRecord(existing), changed: false };
+  }
+
   const { data, error } = await supabase
     .from("signups")
-    .update({ status: "pending_approval" })
+    .update({ status: newStatus })
     .eq("id", id)
     .select()
     .single();
 
   if (error) {
-    console.error("markPendingApproval failed:", error);
-    return null;
+    console.error("upsertSignupStatus update failed:", error);
+    return { record: null as SignupRecord | null, changed: false };
   }
-  return toSignupRecord(data);
+  return { record: toSignupRecord(data), changed: true };
 }
 
-/** For the admin panel — everyone waiting on a decision. */
+/** For the admin panel — everyone NOT yet decided on, at any payment state. */
 export async function listPendingSignups(): Promise<SignupRecord[]> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("signups")
     .select()
-    .eq("status", "pending_approval")
+    .not("status", "in", "(approved,rejected)")
     .order("created_at", { ascending: true });
 
   if (error) {

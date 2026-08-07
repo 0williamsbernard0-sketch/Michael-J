@@ -22,7 +22,7 @@ interface AuthState {
   memberName: string | null;
   memberEmail: string | null;
   loading: boolean;
-  login: (name: string, email: string) => void;
+  login: (name: string) => void;
   logout: () => Promise<void>;
 }
 

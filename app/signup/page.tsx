@@ -1,8 +1,8 @@
 "use client";
-
 import { useState } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 const ANNUAL_PRICE_USD = 100;
 
@@ -28,12 +28,21 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      // ========================================================
-      // Step 1 (recommended): create the user account first
-      // e.g. await supabase.auth.signUp({ email, password, options: { data: { name } } })
-      // ========================================================
+      // Step 1: create the real Supabase Auth user first.
+      const supabase = getSupabaseBrowser();
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name } },
+      });
 
-      // Step 2: create the NOWPayments invoice via our API route
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: create the NOWPayments invoice via our API route.
       const res = await fetch("/api/nowpayments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,7 +57,6 @@ export default function SignupPage() {
         return;
       }
 
-      // Redirect to the NOWPayments-hosted invoice page
       window.location.href = data.invoice_url;
     } catch (err) {
       setError("Something went wrong. Please try again.");
@@ -90,7 +98,7 @@ export default function SignupPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm outline-none focus:border-[#C9A227]"
+                className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm"
                 placeholder="Your full name"
               />
             </div>
@@ -100,7 +108,7 @@ export default function SignupPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm outline-none focus:border-[#C9A227]"
+                className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm"
                 placeholder="you@example.com"
               />
             </div>
@@ -110,13 +118,11 @@ export default function SignupPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm outline-none focus:border-[#C9A227]"
+                className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm"
                 placeholder="At least 8 characters"
               />
             </div>
-
             {error && <p className="text-sm text-[#E0716B]">{error}</p>}
-
             <button
               type="submit"
               disabled={loading}
@@ -141,4 +147,3 @@ export default function SignupPage() {
     </div>
   );
 }
-

@@ -25,6 +25,8 @@ const BENEFITS = [
 ];
 
 export default function DashboardPage() {
+  const { isMember } = useAuth();
+
   return (
     <div className="min-h-screen bg-[#12151A] text-[#F1ECDF] font-body">
       <Nav />
@@ -75,12 +77,14 @@ export default function DashboardPage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <WelcomeMessageButton />
-            <Link
-              href="/signup"
-              className="flex items-center rounded-md border border-white/30 px-6 py-3.5 text-xs font-semibold uppercase tracking-wider hover:border-[#C9A227] transition self-start backdrop-blur-sm"
-            >
-              Join the Society — $100/year
-            </Link>
+            {!isMember && (
+              <Link
+                href="/signup"
+                className="flex items-center rounded-md border border-white/30 px-6 py-3.5 text-xs font-semibold uppercase tracking-wider hover:border-[#C9A227] transition self-start backdrop-blur-sm"
+              >
+                Join the Society — $100/year
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -130,7 +134,7 @@ export default function DashboardPage() {
       <section className="px-5 sm:px-10 py-16 max-w-5xl mx-auto grid sm:grid-cols-2 gap-8">
         <div className="rounded-lg border border-white/10 p-8 bg-[#161A20]">
           <p className="font-body text-[11px] font-semibold uppercase tracking-[0.35em] text-[#C9A227] mb-2">
-            Included
+            {isMember ? "Active" : "Included"}
           </p>
           <h3 className="font-display font-semibold text-2xl mb-6">Membership Benefits</h3>
           <ul className="space-y-3.5 mb-8">
@@ -141,12 +145,14 @@ export default function DashboardPage() {
               </li>
             ))}
           </ul>
-          <Link
-            href="/signup"
-            className="block text-center w-full rounded-md bg-[#C9A227] text-[#12151A] font-semibold uppercase tracking-wider text-xs py-3.5 hover:brightness-110 transition"
-          >
-            Join — $100/year
-          </Link>
+          {!isMember && (
+            <Link
+              href="/signup"
+              className="block text-center w-full rounded-md bg-[#C9A227] text-[#12151A] font-semibold uppercase tracking-wider text-xs py-3.5 hover:brightness-110 transition"
+            >
+              Join — $100/year
+            </Link>
+          )}
         </div>
 
         <div className="rounded-lg border border-white/10 p-8 bg-[#161A20]">
@@ -160,12 +166,14 @@ export default function DashboardPage() {
             <Perk main="LIVE ACCESS" sub="All sessions" />
             <Perk main="MONTHLY" sub="Community spotlight" />
           </div>
-          <Link
-            href="/signup"
-            className="block text-center w-full rounded-md border border-white/20 py-3.5 text-xs font-semibold uppercase tracking-wider hover:border-[#C9A227] transition"
-          >
-            Get Access
-          </Link>
+          {!isMember && (
+            <Link
+              href="/signup"
+              className="block text-center w-full rounded-md border border-white/20 py-3.5 text-xs font-semibold uppercase tracking-wider hover:border-[#C9A227] transition"
+            >
+              Get Access
+            </Link>
+          )}
         </div>
       </section>
 

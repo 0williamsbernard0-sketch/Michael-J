@@ -1,3 +1,4 @@
+import { sendAdminSignupNotification, sendMemberApprovalEmail } from "@/lib/email";
 import { NextRequest, NextResponse } from "next/server";
 import { approveSignup, rejectSignup } from "@/lib/admin-store";
 
@@ -21,15 +22,15 @@ export async function POST(req: NextRequest) {
     }
 
     const record = action === "approve" ? await approveSignup(id) : await rejectSignup(id);
+if (!record) {
+  return NextResponse.json({ error: "Signup not found." }, { status: 404 });
+}
 
-    if (!record) {
-      return NextResponse.json({ error: "Signup not found." }, { status: 404 });
-    }
+if (action === "approve") {
+  await sendMemberApprovalEmail({ name: record.name, email: record.email });
+}
 
-    // TODO: send the member a confirmation email now that they're approved
-    // (or a rejection notice), once you have an email provider wired up.
-
-    return NextResponse.json({ signup: record });
+return NextResponse.json({ signup: record });
   } catch (err) {
     return NextResponse.json({ error: "Server error updating signup." }, { status: 500 });
   }

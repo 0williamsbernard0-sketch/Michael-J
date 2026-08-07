@@ -2,8 +2,8 @@ import Nav from "@/components/Nav";
 import LockGate from "@/components/LockGate";
 
 const EVENTS = [
-  { month: "SEP", day: "06", title: "Fellowship Fundraiser Gala", location: "Lagos, Nigeria" },
-  { month: "OCT", day: "18", title: "Society Fan Meet-Up", location: "Lagos, Nigeria" },
+  { month: "SEP", day: "06", title: "Fellowship Fundraiser Gala", location: "LA, CA" },
+  { month: "OCT", day: "18", title: "Society Fan Meet-Up", location: "LA, CA" },
   { month: "NOV", day: "02", title: "On the Craft — Live Workshop", location: "Virtual" },
 ];
 

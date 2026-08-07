@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import Nav from "@/components/Nav";
 import LockGate from "@/components/LockGate";
 import { useAuth } from "@/lib/auth-context";
@@ -241,14 +242,54 @@ export default function DashboardPage() {
 function WelcomeMessageButton() {
   const { isMember } = useAuth();
   const { openModal } = useLockModal();
+  const [showComingSoon, setShowComingSoon] = useState(false);
+
+  const handleClick = () => {
+    if (isMember) {
+      setShowComingSoon(true);
+    } else {
+      openModal();
+    }
+  };
 
   return (
-    <button
-      onClick={isMember ? undefined : openModal}
-      className="flex items-center justify-center gap-2 rounded-md bg-[#C9A227] text-[#12151A] font-semibold uppercase tracking-wider text-xs px-7 py-3.5 hover:brightness-110 transition"
-    >
-      {!isMember && "🔒"} ▶ Watch Welcome Message
-    </button>
+    <>
+      <button
+        onClick={handleClick}
+        className="flex items-center justify-center gap-2 rounded-md bg-[#C9A227] text-[#12151A] font-semibold uppercase tracking-wider text-xs px-7 py-3.5 hover:brightness-110 transition"
+      >
+        {!isMember && "🔒"} ▶ Watch Welcome Message
+      </button>
+
+      {showComingSoon && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center px-6"
+          onClick={() => setShowComingSoon(false)}
+        >
+          <div
+            className="max-w-sm w-full rounded-lg border border-[#C9A227]/40 bg-[#161A20] p-8 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="font-body text-[11px] font-semibold uppercase tracking-[0.35em] text-[#C9A227] mb-4">
+              Coming Soon
+            </p>
+            <h3 className="font-display font-semibold text-xl mb-3">
+              The Welcome Message Is On Its Way
+            </h3>
+            <p className="text-sm text-[#B8B2A2] mb-6 leading-relaxed">
+              Check back after the upcoming livestream — MBJ&rsquo;s personal
+              welcome to the Society drops soon.
+            </p>
+            <button
+              onClick={() => setShowComingSoon(false)}
+              className="rounded-md border border-white/20 px-6 py-3 text-xs font-semibold uppercase tracking-wider hover:border-[#C9A227] transition"
+            >
+              Got It
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

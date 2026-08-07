@@ -1,10 +1,10 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import { useAuth } from "@/lib/auth-context";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -27,18 +27,13 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      // ============================================================
-      // app/api/auth/login/route.ts currently checks approval status
-      // only — it does NOT verify the password yet. Once Supabase Auth
-      // is wired in, this call should become
-      // supabase.auth.signInWithPassword({ email, password }), with the
-      // approval check layered on top (not replaced).
-      // ============================================================
+      // Step 1: check approval status (does NOT verify password).
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -53,8 +48,20 @@ export default function LoginPage() {
         return;
       }
 
-      // data.status === "approved"
-      login(data.name, data.email);
+      // Step 2: status === "approved" — now do the real password check.
+      const supabase = getSupabaseBrowser();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        setError("Incorrect email or password.");
+        setLoading(false);
+        return;
+      }
+
+      login(data.name);
       router.push("/");
     } catch (err) {
       setError("Something went wrong. Please try again.");
@@ -86,7 +93,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm outline-none focus:border-[#C9A227]"
+                  className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm"
                   placeholder="you@example.com"
                 />
               </div>
@@ -96,13 +103,11 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm outline-none focus:border-[#C9A227]"
+                  className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm"
                   placeholder="••••••••"
                 />
               </div>
-
               {error && <p className="text-sm text-[#E0716B]">{error}</p>}
-
               <button
                 type="submit"
                 disabled={loading}
@@ -124,4 +129,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

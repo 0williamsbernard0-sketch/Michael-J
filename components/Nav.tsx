@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import MessagesBell from "@/components/MessagesBell";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard" },
@@ -15,6 +16,8 @@ const NAV_ITEMS = [
   { href: "/fellowship", label: "Fellowship" },
   { href: "/foundation", label: "Foundation" },
   { href: "/merch", label: "Merch" },
+  { href: "/coupons", label: "Coupons" },
+  { href: "/messages", label: "Messages" },
 ];
 
 export default function Nav() {
@@ -36,6 +39,7 @@ export default function Nav() {
           MBJ <span className="text-[#C9A227]">SOCIETY</span>
         </Link>
         <div className="flex items-center gap-3">
+          {isMember && <MessagesBell />}
           {isMember ? (
             <Link
               href="/account"

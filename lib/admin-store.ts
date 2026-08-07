@@ -1,30 +1,25 @@
+import { getSupabaseAdmin } from "@/lib/supabase";
+
 /**
- * ⚠️ PLACEHOLDER DATA STORE — in-memory only. Read this before launch.
- *
- * This exists so the full signup → payment → admin approval → login flow
- * is wired end-to-end and demoable. It will NOT work correctly once
- * deployed to Vercel:
- *
- *   - Vercel serverless functions do not share memory across invocations
- *     or instances. An admin approving a signup in one request is not
- *     guaranteed to be visible when a user tries to log in on the next
- *     request — they may hit a different, cold instance with an empty Map.
- *   - All data is wiped on every deploy and on cold starts.
- *
- * Before launch, replace every function below with real queries against a
- * Supabase table, e.g.:
+ * Signup data store — now backed by the Supabase `signups` table
+ * instead of an in-memory Map. Table schema:
  *
  *   create table signups (
- *     id text primary key,        -- the NOWPayments order_id
+ *     id text primary key,              -- the NOWPayments order_id
  *     name text not null,
  *     email text not null,
- *     status text not null,       -- 'awaiting_payment' | 'pending_approval' | 'approved' | 'rejected'
+ *     status text not null default 'awaiting_payment',
  *     created_at timestamptz default now()
  *   );
  *
- * Keep the function names/signatures the same and the calling code in
- * app/api/nowpayments/route.ts, app/api/nowpayments/webhook/route.ts,
- * app/api/auth/login/route.ts, and app/api/admin/* won't need to change.
+ * RLS is enabled with a deny-all policy, so every function here goes
+ * through the service-role client (getSupabaseAdmin), which bypasses
+ * RLS. That's why this file must only ever be imported from server
+ * code (API routes) — never from a "use client" component.
+ *
+ * All functions are now async, unlike the old in-memory version.
+ * Every caller has been updated to await them — see the API routes
+ * in app/api/nowpayments/, app/api/auth/login/, and app/api/admin/.
  */
 
 export type SignupStatus = "awaiting_payment" | "pending_approval" | "approved" | "rejected";
@@ -37,58 +32,119 @@ export interface SignupRecord {
   createdAt: string;
 }
 
-const store = new Map<string, SignupRecord>();
+// Supabase rows use snake_case; map to the camelCase shape the rest
+// of the app already expects.
+function toSignupRecord(row: {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  created_at: string;
+}): SignupRecord {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    status: row.status as SignupStatus,
+    createdAt: row.created_at,
+  };
+}
 
 /** Called right after a NOWPayments invoice is created (signup started, not yet paid). */
-export function createAwaitingPayment(id: string, name: string, email: string) {
-  const record: SignupRecord = {
-    id,
-    name,
-    email,
-    status: "awaiting_payment",
-    createdAt: new Date().toISOString(),
-  };
-  store.set(id, record);
-  return record;
+export async function createAwaitingPayment(id: string, name: string, email: string) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("signups")
+    .insert({ id, name, email, status: "awaiting_payment" })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("createAwaitingPayment failed:", error);
+    return null;
+  }
+  return toSignupRecord(data);
 }
 
 /** Called by the NOWPayments webhook when payment_status === "finished". */
-export function markPendingApproval(id: string) {
-  const record = store.get(id);
-  if (!record) return null; // TODO: with Supabase this shouldn't happen — look up by id and fail loudly if missing
-  record.status = "pending_approval";
-  store.set(id, record);
-  return record;
+export async function markPendingApproval(id: string) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("signups")
+    .update({ status: "pending_approval" })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("markPendingApproval failed:", error);
+    return null;
+  }
+  return toSignupRecord(data);
 }
 
 /** For the admin panel — everyone waiting on a decision. */
-export function listPendingSignups(): SignupRecord[] {
-  return Array.from(store.values())
-    .filter((r) => r.status === "pending_approval")
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+export async function listPendingSignups(): Promise<SignupRecord[]> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("signups")
+    .select()
+    .eq("status", "pending_approval")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("listPendingSignups failed:", error);
+    return [];
+  }
+  return data.map(toSignupRecord);
 }
 
-export function approveSignup(id: string) {
-  const record = store.get(id);
-  if (!record) return null;
-  record.status = "approved";
-  store.set(id, record);
-  return record;
+export async function approveSignup(id: string) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("signups")
+    .update({ status: "approved" })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("approveSignup failed:", error);
+    return null;
+  }
+  return toSignupRecord(data);
 }
 
-export function rejectSignup(id: string) {
-  const record = store.get(id);
-  if (!record) return null;
-  record.status = "rejected";
-  store.set(id, record);
-  return record;
+export async function rejectSignup(id: string) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("signups")
+    .update({ status: "rejected" })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("rejectSignup failed:", error);
+    return null;
+  }
+  return toSignupRecord(data);
 }
 
 /** For login — most recent signup for this email, regardless of status. */
-export function findLatestSignupByEmail(email: string): SignupRecord | null {
-  const matches = Array.from(store.values())
-    .filter((r) => r.email.toLowerCase() === email.toLowerCase())
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  return matches[0] ?? null;
-}
+export async function findLatestSignupByEmail(email: string): Promise<SignupRecord | null> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("signups")
+    .select()
+    .ilike("email", email)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
+  if (error) {
+    console.error("findLatestSignupByEmail failed:", error);
+    return null;
+  }
+  return data ? toSignupRecord(data) : null;
+}

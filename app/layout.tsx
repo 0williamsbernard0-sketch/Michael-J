@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import { LockModalProvider } from "@/lib/lock-modal-context";
 import MembersOnlyModal from "@/components/MembersOnlyModal";
 import FloatingAccessButton from "@/components/FloatingAccessButton";
 import "./globals.css";
 
-const fraunces = Fraunces({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: ["500", "600", "700", "800"],
   variable: "--font-display",
   display: "swap",
 });
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body className="bg-[#12151A] text-[#F1ECDF] font-body">
         <AuthProvider>
           <LockModalProvider>

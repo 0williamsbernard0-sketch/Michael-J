@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email is required." }, { status: 400 });
     }
 
-    const record = findLatestSignupByEmail(email);
+    const record = await findLatestSignupByEmail(email);
 
     if (!record) {
       return NextResponse.json(

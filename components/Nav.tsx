@@ -93,10 +93,10 @@ export default function Nav() {
           <div className="mt-10 pt-6 border-t border-white/10 pb-10">
             {isMember ? (
               <button
-                onClick={() => {
-                  logout();
-                  setMenuOpen(false);
-                }}
+                onClick={async () => {
+  await logout();
+  setMenuOpen(false);
+}}
                 className="text-sm text-[#B8B2A2]"
               >
                 Sign out

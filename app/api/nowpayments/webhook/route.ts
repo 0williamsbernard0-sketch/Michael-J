@@ -1,26 +1,19 @@
 import { sendAdminSignupNotification } from "@/lib/email";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { markPendingApproval } from "@/lib/admin-store";
+import { upsertSignupStatus, SignupStatus } from "@/lib/admin-store";
 
 /**
  * NOWPayments IPN (Instant Payment Notification) webhook.
- * NOWPayments calls this URL when a payment's status changes.
+ * NOWPayments calls this URL when a payment's status changes — it may
+ * fire multiple times per order (waiting -> confirming -> partially_paid
+ * -> finished, or waiting -> expired, etc.). We record every status so
+ * nothing falls through the cracks, and only notify the admin when the
+ * status actually changes to something needing a decision.
  *
- * Set this exact URL as your ipn_callback_url (already wired in
- * app/api/nowpayments/route.ts) and set NOWPAYMENTS_IPN_SECRET in your
- * env vars (from the NOWPayments dashboard) to verify authenticity.
- *
- * ⚠️ This is a stub. Before relying on it in production:
- *  - Wire the TODOs below to your actual Supabase `signups` table (see
- *    lib/admin-store.ts for the schema this code assumes).
- *  - Confirm you're only granting access on `payment_status === "finished"`
- *    (NOWPayments also sends "waiting", "confirming", "partially_paid",
- *    "failed", etc. — don't grant access on those).
- *
- * Payment confirmation does NOT grant login access by itself — it moves
- * the signup to "pending_approval" so it shows up in /admin for a team
- * member to approve. Only after approval can the user log in.
+ * Payment confirmation does NOT grant login access by itself — "finished"
+ * moves the signup to "pending_approval" so it shows up in /admin for a
+ * team member to approve. Only after approval can the user log in.
  */
 
 function verifySignature(rawBody: string, signatureHeader: string | null, secret: string) {
@@ -28,6 +21,27 @@ function verifySignature(rawBody: string, signatureHeader: string | null, secret
   const sorted = JSON.stringify(JSON.parse(rawBody), Object.keys(JSON.parse(rawBody)).sort());
   const hmac = crypto.createHmac("sha512", secret).update(sorted).digest("hex");
   return hmac === signatureHeader;
+}
+
+// Map NOWPayments' payment_status values to our internal status enum.
+function mapStatus(paymentStatus: string): SignupStatus | null {
+  switch (paymentStatus) {
+    case "waiting":
+      return "waiting";
+    case "confirming":
+    case "sending":
+      return "confirming";
+    case "partially_paid":
+      return "partially_paid";
+    case "finished":
+      return "pending_approval";
+    case "failed":
+      return "failed";
+    case "expired":
+      return "expired";
+    default:
+      return null; // unknown status — ignore rather than guess
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -45,22 +59,27 @@ export async function POST(req: NextRequest) {
   const payload = JSON.parse(rawBody);
   const { order_id, payment_status } = payload;
 
-  if (payment_status === "finished") {
-  const record = await markPendingApproval(order_id);
-  // TODO: also persist expires_at = now + 1 year once you're on Supabase,
-  // so approval can set an actual membership expiry rather than just a
-  // boolean approved flag.
-  if (record) {
-    await sendAdminSignupNotification({
-      name: record.name,
-      email: record.email,
-      orderId: record.id,
-    });
+  const mapped = mapStatus(payment_status);
+  if (!mapped) {
+    console.warn("Unrecognized payment_status from NOWPayments:", payment_status, order_id);
+    return NextResponse.json({ received: true });
   }
-}
 
+  const { record, changed } = await upsertSignupStatus(order_id, mapped);
+
+  // Notify admin whenever the status actually changes to something that
+  // needs a human look — full payment, partial payment, or a stall/failure.
+  if (record && changed) {
+    const notifyOn: SignupStatus[] = ["pending_approval", "partially_paid", "failed", "expired"];
+    if (notifyOn.includes(mapped)) {
+      await sendAdminSignupNotification({
+        name: record.name,
+        email: record.email,
+        orderId: record.id,
+      });
+    }
+  }
 
   // Always respond 200 so NOWPayments doesn't keep retrying once received.
   return NextResponse.json({ received: true });
 }
-

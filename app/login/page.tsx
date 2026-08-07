@@ -56,10 +56,10 @@ export default function LoginPage() {
       });
 
       if (signInError) {
-        setError("Incorrect email or password.");
-        setLoading(false);
-        return;
-      }
+  setError(signInError.message);
+  setLoading(false);
+  return;
+}
 
       login(data.name);
       router.push("/");

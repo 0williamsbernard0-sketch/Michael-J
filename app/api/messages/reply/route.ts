@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase-server";
 
 export async function POST(req: NextRequest) {
-  const { proposalId, body } = await req.json();
-  if (!proposalId || !body?.trim()) {
+  const { proposalId, body, attachmentUrl, attachmentName } = await req.json();
+
+  if (!proposalId || (!body?.trim() && !attachmentUrl)) {
     return NextResponse.json({ error: "Missing fields." }, { status: 400 });
   }
 
@@ -20,7 +21,9 @@ export async function POST(req: NextRequest) {
       related_proposal_id: proposalId,
       sender: "user",
       subject: "Re: your proposal",
-      body: body.trim(),
+      body: body?.trim() || (attachmentName ? `Sent a file: ${attachmentName}` : ""),
+      attachment_url: attachmentUrl ?? null,
+      attachment_name: attachmentName ?? null,
       read: true,
     })
     .select()

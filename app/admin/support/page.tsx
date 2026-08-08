@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 
@@ -34,16 +34,29 @@ export default function AdminSupportPage() {
       if (!res.ok) {
         setError(data.error ?? "Couldn't load tickets.");
         setUnlocked(false);
+        sessionStorage.removeItem("mbj_admin_secret");
         return;
       }
       setTickets(data.tickets);
       setUnlocked(true);
+      sessionStorage.setItem("mbj_admin_secret", secretValue);
     } catch {
       setError("Network error — please try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  // Auto-unlock if we already verified the key earlier this session
+  // (e.g. coming here from the Signups or Proposals tab).
+  useEffect(() => {
+    const saved = sessionStorage.getItem("mbj_admin_secret");
+    if (saved) {
+      setSecret(saved);
+      fetchTickets(saved);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,17 +92,15 @@ export default function AdminSupportPage() {
           <div className="w-full max-w-sm">
             <h1 className="font-display text-2xl mb-2">Admin Access</h1>
             <p className="text-sm text-[#B8B2A2] mb-6">
-              Enter the passcode to view support tickets.
+              Enter the admin key to view support tickets.
             </p>
             <form onSubmit={handleUnlock} className="space-y-4">
               <input
                 type="password"
-                inputMode="numeric"
-                maxLength={4}
                 value={secret}
-                onChange={(e) => setSecret(e.target.value.replace(/\D/g, ""))}
-                placeholder="4-digit passcode"
-                className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm outline-none focus:border-[#C9A227] tracking-[0.5em] text-center"
+                onChange={(e) => setSecret(e.target.value)}
+                placeholder="Admin key"
+                className="w-full rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm outline-none focus:border-[#C9A227]"
               />
               {error && <p className="text-sm text-[#E0716B]">{error}</p>}
               <button
@@ -110,36 +121,49 @@ export default function AdminSupportPage() {
     <div className="min-h-screen bg-[#12151A] text-[#F1ECDF] font-body">
       <Nav />
       <main className="pt-28 pb-20 px-5 sm:px-10 max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="font-display text-3xl">Support Tickets</h1>
-          <Link href="/admin-panel" className="text-xs text-[#B8B2A2] hover:text-[#C9A227] transition">
-            ← Pending Signups
+        <div className="flex items-center gap-6 mb-8 border-b border-white/10">
+          <Link
+            href="/admin"
+            className="text-sm text-[#B8B2A2] hover:text-[#C9A227] pb-3 transition"
+          >
+            Signups
           </Link>
+          <Link
+            href="/admin/proposals"
+            className="text-sm text-[#B8B2A2] hover:text-[#C9A227] pb-3 transition"
+          >
+            Fellowship Proposals
+          </Link>
+          <span className="text-sm font-semibold pb-3 border-b-2 border-[#C9A227] text-[#C9A227]">
+            Support Tickets
+          </span>
         </div>
 
-        <div className="flex items-center gap-4 mb-8">
-          <div className="flex gap-2">
-            {(["open", "resolved", "all"] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={
-                  "text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border transition " +
-                  (filter === f
-                    ? "border-[#C9A227] text-[#C9A227]"
-                    : "border-white/15 text-[#B8B2A2] hover:border-white/30")
-                }
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="font-display text-3xl">Support Tickets</h1>
           <button
             onClick={() => fetchTickets(secret)}
-            className="text-xs text-[#B8B2A2] hover:text-[#C9A227] transition ml-auto"
+            className="text-xs text-[#B8B2A2] hover:text-[#C9A227] transition"
           >
             Refresh
           </button>
+        </div>
+
+        <div className="flex gap-2 mb-8">
+          {(["open", "resolved", "all"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={
+                "text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border transition " +
+                (filter === f
+                  ? "border-[#C9A227] text-[#C9A227]"
+                  : "border-white/15 text-[#B8B2A2] hover:border-white/30")
+              }
+            >
+              {f}
+            </button>
+          ))}
         </div>
 
         {visibleTickets.length === 0 ? (

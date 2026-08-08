@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Nav from "@/components/Nav";
 
-const GALLERY_COUNT = 36;
+const GALLERY_COUNT = 49;
 const galleryImages = Array.from({ length: GALLERY_COUNT }, (_, i) => {
   const num = String(i + 1).padStart(2, "0");
   return `/images/fan-gallery/gallery-${num}.jpeg`;
@@ -38,7 +38,7 @@ export default function FanGalleryPage() {
           />
         </button>
 
-        {/* ---------- GRID OF 36 ---------- */}
+        {/* ---------- GRID OF 49 ---------- */}
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3">
           {galleryImages.map((src, i) => (
             <button

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const ticket = createTicket(name, email, subject, message);
+    const ticket = await createTicket(name, email, subject, message);
 
     return NextResponse.json({ ok: true, id: ticket.id });
   } catch (err) {

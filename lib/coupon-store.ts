@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { UNLOCK_COST, LIVESTREAM_COST } from "@/lib/coupon-constants";
+import { LIVESTREAM_COST } from "@/lib/coupon-constants";
+import { getContentCost } from "@/lib/content-pricing";
 
 interface SignupRow {
   id: string;
@@ -66,10 +67,13 @@ export async function creditCoupons(email: string, amount: number) {
   return true;
 }
 
-/** Unlocks a single content item for 10 coupons. */
+/** Unlocks a single content item. Cost is looked up server-side via
+ *  getContentCost() — never trusted from the client — so per-item
+ *  pricing overrides (e.g. a 5-coupon video) can't be tampered with. */
 export async function unlockContentItem(email: string, contentType: string, contentId: string) {
   const supabase = getSupabaseAdmin();
   const signup = await getActiveSignup(email);
+  const cost = getContentCost(contentId);
 
   if (!isMembershipActive(signup)) {
     return { ok: false as const, error: "Membership is not active." };
@@ -84,13 +88,13 @@ export async function unlockContentItem(email: string, contentType: string, cont
     .maybeSingle();
   if (existing) return { ok: true as const };
 
-  if ((signup!.coupon_balance ?? 0) < UNLOCK_COST) {
+  if ((signup!.coupon_balance ?? 0) < cost) {
     return { ok: false as const, error: "Not enough coupons." };
   }
 
   const { error: deductError } = await supabase
     .from("signups")
-    .update({ coupon_balance: signup!.coupon_balance - UNLOCK_COST })
+    .update({ coupon_balance: signup!.coupon_balance - cost })
     .eq("id", signup!.id);
   if (deductError) return { ok: false as const, error: "Couldn't deduct coupons." };
 

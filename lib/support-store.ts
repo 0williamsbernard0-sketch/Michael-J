@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export type TicketStatus = "open" | "resolved";
 
@@ -30,8 +30,10 @@ export async function createTicket(
   subject: string,
   message: string
 ): Promise<SupportTicket> {
+  const supabase = getSupabaseAdmin();
   const id = `ticket-${Date.now()}`;
-  const { data, error } = await supabaseAdmin
+
+  const { data, error } = await supabase
     .from("support_tickets")
     .insert({ id, name, email, subject, message, status: "open" })
     .select()
@@ -42,7 +44,9 @@ export async function createTicket(
 }
 
 export async function listTickets(): Promise<SupportTicket[]> {
-  const { data, error } = await supabaseAdmin
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
     .from("support_tickets")
     .select()
     .order("created_at", { ascending: false });
@@ -55,7 +59,9 @@ export async function setTicketStatus(
   id: string,
   status: TicketStatus
 ): Promise<SupportTicket | null> {
-  const { data, error } = await supabaseAdmin
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
     .from("support_tickets")
     .update({ status })
     .eq("id", id)

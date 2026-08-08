@@ -1,13 +1,6 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-/**
- * Server-side Supabase client that reads the logged-in user's session
- * from cookies. Use this in API routes / Server Components when you
- * need to know *which member* is making the request (respects RLS).
- *
- * Do NOT use this for admin actions — use getSupabaseAdmin() instead.
- */
 export async function getSupabaseServer() {
   const cookieStore = await cookies();
 
@@ -19,7 +12,9 @@ export async function getSupabaseServer() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(
+          cookiesToSet: { name: string; value: string; options: CookieOptions }[]
+        ) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)

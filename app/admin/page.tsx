@@ -55,7 +55,7 @@ export default function AdminPage() {
   };
 
   // Auto-unlock if we already verified the key earlier this session
-  // (e.g. coming here from the Proposals tab).
+  // (e.g. coming here from the Proposals or Support tab).
   useEffect(() => {
     const saved = sessionStorage.getItem("mbj_admin_secret");
     if (saved) {
@@ -135,6 +135,12 @@ export default function AdminPage() {
             className="text-sm text-[#B8B2A2] hover:text-[#C9A227] pb-3 transition"
           >
             Fellowship Proposals
+          </Link>
+          <Link
+            href="/admin/support"
+            className="text-sm text-[#B8B2A2] hover:text-[#C9A227] pb-3 transition"
+          >
+            Support Tickets
           </Link>
         </div>
 

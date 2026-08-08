@@ -1,6 +1,5 @@
-// app/api/messages/reply/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabase-server"; // your session-aware client
+import { getSupabaseServer } from "@/lib/supabase-server";
 
 export async function POST(req: NextRequest) {
   const { proposalId, body } = await req.json();
@@ -8,7 +7,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing fields." }, { status: 400 });
   }
 
-  const supabase = getSupabaseServer();
+  const supabase = await getSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });

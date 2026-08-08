@@ -1,25 +1,4 @@
-/**
- * ⚠️ PLACEHOLDER DATA STORE — in-memory only, same caveat as
- * lib/admin-store.ts. This works for local testing but will NOT persist
- * reliably once deployed to Vercel (serverless functions don't share
- * memory across invocations, and everything resets on redeploy/cold
- * start).
- *
- * Before launch, replace with a real Supabase table:
- *
- *   create table support_tickets (
- *     id text primary key,
- *     name text not null,
- *     email text not null,
- *     subject text not null,
- *     message text not null,
- *     status text not null,     -- 'open' | 'resolved'
- *     created_at timestamptz default now()
- *   );
- *
- * Keep the function names/signatures the same and the calling routes
- * (app/api/support, app/api/admin/support-tickets/*) won't need to change.
- */
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export type TicketStatus = "open" | "resolved";
 
@@ -33,31 +12,56 @@ export interface SupportTicket {
   createdAt: string;
 }
 
-const store = new Map<string, SupportTicket>();
-
-export function createTicket(name: string, email: string, subject: string, message: string) {
-  const id = `ticket-${Date.now()}`;
-  const ticket: SupportTicket = {
-    id,
-    name,
-    email,
-    subject,
-    message,
-    status: "open",
-    createdAt: new Date().toISOString(),
+function fromRow(row: any): SupportTicket {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    subject: row.subject,
+    message: row.message,
+    status: row.status,
+    createdAt: row.created_at,
   };
-  store.set(id, ticket);
-  return ticket;
 }
 
-export function listTickets(): SupportTicket[] {
-  return Array.from(store.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export async function createTicket(
+  name: string,
+  email: string,
+  subject: string,
+  message: string
+): Promise<SupportTicket> {
+  const id = `ticket-${Date.now()}`;
+  const { data, error } = await supabaseAdmin
+    .from("support_tickets")
+    .insert({ id, name, email, subject, message, status: "open" })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return fromRow(data);
 }
 
-export function setTicketStatus(id: string, status: TicketStatus) {
-  const ticket = store.get(id);
-  if (!ticket) return null;
-  ticket.status = status;
-  store.set(id, ticket);
-  return ticket;
+export async function listTickets(): Promise<SupportTicket[]> {
+  const { data, error } = await supabaseAdmin
+    .from("support_tickets")
+    .select()
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []).map(fromRow);
+}
+
+export async function setTicketStatus(
+  id: string,
+  status: TicketStatus
+): Promise<SupportTicket | null> {
+  const { data, error } = await supabaseAdmin
+    .from("support_tickets")
+    .update({ status })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) return null;
+  return fromRow(data);
 }

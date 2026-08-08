@@ -6,7 +6,7 @@ import Nav from "@/components/Nav";
 const GALLERY_COUNT = 36;
 const galleryImages = Array.from({ length: GALLERY_COUNT }, (_, i) => {
   const num = String(i + 1).padStart(2, "0");
-  return `/images/fan-gallery/gallery-${num}.jpg`;
+  return `/images/fan-gallery/gallery-${num}.jpeg`;
 });
 
 export default function FanGalleryPage() {
@@ -27,7 +27,7 @@ export default function FanGalleryPage() {
 
         {/* ---------- HERO IMAGE ---------- */}
         <button
-          onClick={() => setSelected("/images/fan-gallery/hero.jpg")}
+          onClick={() => setSelected("/images/fan-gallery/hero.jpeg")}
           className="block w-full rounded-lg overflow-hidden border border-white/10 mb-4"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}

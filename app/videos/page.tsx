@@ -22,6 +22,17 @@ const CATEGORIES = [
       { id: "origins", title: "Origins", sub: "How It Started", duration: "22:00" },
     ],
   },
+  {
+    title: "💰 Fellowship Funding",
+    items: [
+      {
+        id: "funding-disbursement-requirements",
+        title: "Funding Disbursement Requirements & Future Funding Opportunities",
+        sub: "What recipients need to know",
+        duration: "7:00",
+      },
+    ],
+  },
 ];
 
 export default function VideosPage() {

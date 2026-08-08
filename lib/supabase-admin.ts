@@ -1,16 +1,25 @@
-// lib/supabase-admin.ts
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Server-only Supabase client using the service_role key — full
- * read/write access, bypasses Row Level Security.
+ * Server-only Supabase client, using the service role key.
  *
- * NEVER import this file into a "use client" component. It's only safe
- * inside app/api/*/route.ts files, which run exclusively on the server.
- * These routes already gate admin access with ADMIN_SECRET, so this
- * client intentionally skips RLS rather than needing separate policies.
+ * This bypasses Row Level Security — that's intentional, since the
+ * `signups` table has RLS set to deny all public access (see the SQL
+ * setup). Only server-side code (API routes) should ever import this
+ * file. Never import it into a "use client" component — the service
+ * role key must never reach the browser.
  */
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceKey) {
+    throw new Error(
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY."
+    );
+  }
+
+  return createClient(url, serviceKey, {
+    auth: { persistSession: false },
+  });
+}

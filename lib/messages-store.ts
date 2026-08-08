@@ -6,6 +6,7 @@ export async function sendMessage(data: {
   subject: string;
   body: string;
   relatedProposalId?: string;
+  sender?: "admin" | "user";
 }) {
   const supabase = getSupabaseAdmin();
   const { data: row, error } = await supabase
@@ -15,6 +16,7 @@ export async function sendMessage(data: {
       subject: data.subject,
       body: data.body,
       related_proposal_id: data.relatedProposalId ?? null,
+      sender: data.sender ?? "admin",
     })
     .select()
     .single();

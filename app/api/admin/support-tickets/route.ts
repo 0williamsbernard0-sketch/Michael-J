@@ -11,5 +11,10 @@ export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  return NextResponse.json({ tickets: listTickets() });
+  try {
+    const tickets = await listTickets();
+    return NextResponse.json({ tickets });
+  } catch (err) {
+    return NextResponse.json({ error: "Server error loading tickets." }, { status: 500 });
+  }
 }

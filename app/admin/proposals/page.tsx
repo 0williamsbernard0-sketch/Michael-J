@@ -22,6 +22,8 @@ interface ThreadMessage {
   subject: string;
   body: string;
   created_at: string;
+  attachment_url: string | null;
+  attachment_name: string | null;
 }
 
 const STATUS_OPTIONS: Proposal["status"][] = [
@@ -257,6 +259,16 @@ export default function AdminProposalsPage() {
                               {m.sender === "admin" ? "You" : p.fullName}
                             </p>
                             {m.body}
+                            {m.attachment_url && (
+                              <a
+                                href={m.attachment_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block mt-2 text-xs text-[#C9A227] underline"
+                              >
+                                📎 {m.attachment_name ?? "View attachment"}
+                              </a>
+                            )}
                           </div>
                         ))}
                       </div>

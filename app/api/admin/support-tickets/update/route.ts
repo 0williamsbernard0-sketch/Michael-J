@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "id and status are required." }, { status: 400 });
     }
 
-    const ticket = setTicketStatus(id, status);
+    const ticket = await setTicketStatus(id, status);
     if (!ticket) {
       return NextResponse.json({ error: "Ticket not found." }, { status: 404 });
     }

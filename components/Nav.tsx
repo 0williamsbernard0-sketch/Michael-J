@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { href: "/coupons", label: "Coupons" },
   { href: "/messages", label: "Messages" },
   { href: "/support", label: "Support" },
+  { href: "/fan-gallery", label: "Fan Gallery" },
 ];
 
 export default function Nav() {

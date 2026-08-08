@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import Nav from "@/components/Nav";
 import LockGate from "@/components/LockGate";
@@ -12,6 +13,8 @@ interface MessageRow {
   body: string;
   read: boolean;
   created_at: string;
+  attachment_url: string | null;
+  attachment_name: string | null;
 }
 
 export default function MessagesPage() {
@@ -33,7 +36,9 @@ function Inbox() {
   const [loading, setLoading] = useState(true);
   const [openThread, setOpenThread] = useState<string | null>(null);
   const [reply, setReply] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const load = async () => {
     const supabase = getSupabaseBrowser();
@@ -45,10 +50,12 @@ function Inbox() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const threads = messages.reduce<Record<string, MessageRow[]>>((acc, m) => {
-    if (!m.related_proposal_id) return acc; // skip messages not tied to a proposal
+    if (!m.related_proposal_id) return acc;
     (acc[m.related_proposal_id] ??= []).push(m);
     return acc;
   }, {});
@@ -61,20 +68,51 @@ function Inbox() {
   };
 
   const sendReply = async (proposalId: string) => {
-    if (!reply.trim()) return;
+    if (!reply.trim() && !file) return;
     setSending(true);
     try {
+      let attachmentUrl: string | null = null;
+      let attachmentName: string | null = null;
+
+      if (file) {
+        setUploading(true);
+        const supabase = getSupabaseBrowser();
+        const path = `${proposalId}/${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("message-attachments")
+          .upload(path, file);
+        if (uploadError) throw uploadError;
+
+        const { data: signed } = await supabase.storage
+          .from("message-attachments")
+          .createSignedUrl(path, 60 * 60 * 24 * 30);
+        attachmentUrl = signed?.signedUrl ?? null;
+        attachmentName = file.name;
+        setUploading(false);
+      }
+
       const res = await fetch("/api/messages/reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ proposalId, body: reply.trim() }),
+        body: JSON.stringify({
+          proposalId,
+          body: reply.trim(),
+          attachmentUrl,
+          attachmentName,
+        }),
       });
       if (res.ok) {
         setReply("");
+        setFile(null);
         await load();
+      } else {
+        alert("Couldn't send — try again.");
       }
+    } catch {
+      alert("Couldn't send — try again.");
     } finally {
       setSending(false);
+      setUploading(false);
     }
   };
 
@@ -122,23 +160,51 @@ function Inbox() {
                       {m.sender === "admin" ? "MBJ Society" : "You"}
                     </p>
                     {m.body}
+                    {m.attachment_url && (
+                      <a
+                        href={m.attachment_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block mt-2 text-xs text-[#C9A227] underline"
+                      >
+                        📎 {m.attachment_name ?? "View attachment"}
+                      </a>
+                    )}
                   </div>
                 ))}
 
-                <div className="flex gap-2 pt-2">
-                  <input
-                    value={reply}
-                    onChange={(e) => setReply(e.target.value)}
-                    placeholder="Write a reply…"
-                    className="flex-1 rounded-md bg-[#12151A] border border-white/10 px-3 py-2 text-sm outline-none focus:border-[#C9A227]"
-                  />
-                  <button
-                    onClick={() => sendReply(proposalId)}
-                    disabled={sending}
-                    className="rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-4 py-2 text-xs disabled:opacity-60"
-                  >
-                    {sending ? "…" : "Send"}
-                  </button>
+                <div className="space-y-2 pt-2">
+                  <div className="flex gap-2">
+                    <input
+                      value={reply}
+                      onChange={(e) => setReply(e.target.value)}
+                      placeholder="Write a reply…"
+                      className="flex-1 rounded-md bg-[#12151A] border border-white/10 px-3 py-2 text-sm outline-none focus:border-[#C9A227]"
+                    />
+                    <button
+                      onClick={() => sendReply(proposalId)}
+                      disabled={sending}
+                      className="rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-4 py-2 text-xs disabled:opacity-60"
+                    >
+                      {uploading ? "Uploading…" : sending ? "…" : "Send"}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                      className="text-xs text-[#B8B2A2] flex-1"
+                    />
+                    {file && (
+                      <button
+                        onClick={() => setFile(null)}
+                        className="text-xs text-[#E0716B]"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

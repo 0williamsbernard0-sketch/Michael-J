@@ -16,6 +16,14 @@ interface Proposal {
   createdAt: string;
 }
 
+interface ThreadMessage {
+  id: string;
+  sender: "admin" | "user";
+  subject: string;
+  body: string;
+  created_at: string;
+}
+
 const STATUS_OPTIONS: Proposal["status"][] = [
   "under_review",
   "approved",
@@ -41,6 +49,8 @@ export default function AdminProposalsPage() {
   const [replySubject, setReplySubject] = useState<Record<string, string>>({});
   const [replyBody, setReplyBody] = useState<Record<string, string>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [threads, setThreads] = useState<Record<string, ThreadMessage[]>>({});
+  const [threadLoading, setThreadLoading] = useState<string | null>(null);
 
   const fetchProposals = async (secretValue: string) => {
     setLoading(true);
@@ -80,6 +90,25 @@ export default function AdminProposalsPage() {
     fetchProposals(secret);
   };
 
+  const toggleOpen = async (p: Proposal) => {
+    const next = openId === p.id ? null : p.id;
+    setOpenId(next);
+    if (next && !threads[p.id]) {
+      setThreadLoading(p.id);
+      try {
+        const res = await fetch(`/api/admin/messages?proposalId=${p.id}`, {
+          headers: { "x-admin-secret": secret },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setThreads((t) => ({ ...t, [p.id]: data.messages }));
+        }
+      } finally {
+        setThreadLoading(null);
+      }
+    }
+  };
+
   const handleRespond = async (p: Proposal) => {
     const status = replyStatus[p.id] ?? p.status;
     const subject = replySubject[p.id]?.trim();
@@ -103,6 +132,11 @@ export default function AdminProposalsPage() {
         setOpenId(null);
         setReplySubject((s) => ({ ...s, [p.id]: "" }));
         setReplyBody((b) => ({ ...b, [p.id]: "" }));
+        setThreads((t) => {
+          const copy = { ...t };
+          delete copy[p.id];
+          return copy;
+        });
       } else {
         alert("Couldn't send response.");
       }
@@ -191,7 +225,7 @@ export default function AdminProposalsPage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => setOpenId(openId === p.id ? null : p.id)}
+                    onClick={() => toggleOpen(p)}
                     className="text-xs text-[#C9A227] shrink-0"
                   >
                     {openId === p.id ? "Close" : "Review"}
@@ -202,6 +236,31 @@ export default function AdminProposalsPage() {
                   <div className="mt-4 pt-4 border-t border-white/10 space-y-4">
                     <p className="text-sm text-[#B8B2A2] whitespace-pre-wrap">{p.reason}</p>
                     {p.phone && <p className="text-xs text-[#B8B2A2]">Phone: {p.phone}</p>}
+
+                    {threadLoading === p.id && (
+                      <p className="text-xs text-[#B8B2A2]">Loading conversation…</p>
+                    )}
+
+                    {threads[p.id] && threads[p.id].length > 0 && (
+                      <div className="space-y-2 border-t border-white/10 pt-4">
+                        <p className="text-xs text-[#B8B2A2] mb-1">Conversation</p>
+                        {threads[p.id].map((m) => (
+                          <div
+                            key={m.id}
+                            className={`text-sm rounded-md p-3 whitespace-pre-wrap ${
+                              m.sender === "admin"
+                                ? "bg-[#12151A] text-[#F1ECDF]"
+                                : "bg-[#1F6F6B]/20 text-[#F1ECDF] ml-6"
+                            }`}
+                          >
+                            <p className="text-[10px] uppercase tracking-wide text-[#B8B2A2] mb-1">
+                              {m.sender === "admin" ? "You" : p.fullName}
+                            </p>
+                            {m.body}
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     <div>
                       <label className="block text-xs text-[#B8B2A2] mb-1.5">Set status</label>

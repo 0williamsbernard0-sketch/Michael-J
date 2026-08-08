@@ -75,13 +75,16 @@ function Inbox() {
       let attachmentName: string | null = null;
 
       if (file) {
-        setUploading(true);
-        const supabase = getSupabaseBrowser();
-        const path = `${proposalId}/${Date.now()}-${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from("message-attachments")
-          .upload(path, file);
-        if (uploadError) throw uploadError;
+  setUploading(true);
+  const supabase = getSupabaseBrowser();
+  const path = `${proposalId}/${Date.now()}-${file.name}`;
+  const { error: uploadError } = await supabase.storage
+    .from("message-attachments")
+    .upload(path, file);
+  if (uploadError) {
+    alert(`Upload failed: ${uploadError.message}`);
+    throw uploadError;
+  }
 
         const { data: signed } = await supabase.storage
           .from("message-attachments")

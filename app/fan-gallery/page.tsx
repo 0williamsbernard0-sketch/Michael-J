@@ -32,7 +32,7 @@ export default function FanGalleryPage() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/images/fan-gallery/hero.jpg"
+            src="/images/fan-gallery/hero.jpeg"
             alt="MBJ Society fan club"
             className="w-full h-auto object-cover"
           />

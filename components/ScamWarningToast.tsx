@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const AUTO_DISMISS_MS = 8000;
+const AUTO_DISMISS_MS = 20000;
 const SESSION_KEY = "mbj_scam_warning_seen";
 
 export default function ScamWarningToast() {

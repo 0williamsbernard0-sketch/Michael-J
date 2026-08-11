@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { replyToTicket, listTickets } from "@/lib/support-store";
 import { sendSupportReplyEmail } from "@/lib/email";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 function isAuthorized(req: NextRequest) {
   const secret = process.env.ADMIN_SECRET;
@@ -38,6 +39,26 @@ export async function POST(req: NextRequest) {
     const updated = await replyToTicket(id, reply);
     if (!updated) {
       return NextResponse.json({ error: "Couldn't save the reply." }, { status: 500 });
+    }
+
+    // Insert into the shared `messages` inbox so the member sees this in
+    // /messages, same as fellowship committee messages. `related_proposal_id`
+    // is reused generically here as a thread key — it holds the ticket id,
+    // not an actual fellowship proposal id, for support-sourced threads.
+    // `source: 'support'` is what lets the UI label this correctly.
+    const supabase = getSupabaseAdmin();
+    const { error: msgError } = await supabase.from("messages").insert({
+      related_proposal_id: updated.id,
+      sender: "admin",
+      subject: `Support: ${updated.subject}`,
+      body: reply,
+      read: false,
+      source: "support",
+    });
+    if (msgError) {
+      // Reply is already saved on the ticket — don't fail the whole
+      // request just because the inbox copy failed. Log for now.
+      console.error("Failed to insert support reply into messages inbox:", msgError);
     }
 
     await sendSupportReplyEmail({

@@ -12,6 +12,9 @@ interface SupportTicket {
   message: string;
   status: "open" | "resolved";
   createdAt: string;
+  reply: string | null;
+  repliedAt: string | null;
+  isMember: boolean;
 }
 
 export default function AdminSupportPage() {
@@ -22,6 +25,8 @@ export default function AdminSupportPage() {
   const [error, setError] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"open" | "resolved" | "all">("open");
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [sendingReplyId, setSendingReplyId] = useState<string | null>(null);
 
   const fetchTickets = async (secretValue: string) => {
     setLoading(true);
@@ -47,8 +52,6 @@ export default function AdminSupportPage() {
     }
   };
 
-  // Auto-unlock if we already verified the key earlier this session
-  // (e.g. coming here from the Signups or Proposals tab).
   useEffect(() => {
     const saved = sessionStorage.getItem("mbj_admin_secret");
     if (saved) {
@@ -79,6 +82,31 @@ export default function AdminSupportPage() {
       }
     } finally {
       setActioningId(null);
+    }
+  };
+
+  const handleSendReply = async (id: string) => {
+    const reply = replyDrafts[id]?.trim();
+    if (!reply) return;
+    setSendingReplyId(id);
+    try {
+      const res = await fetch("/api/admin/support-tickets/reply", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-secret": secret,
+        },
+        body: JSON.stringify({ id, reply }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTickets((prev) => prev.map((t) => (t.id === id ? data.ticket : t)));
+        setReplyDrafts((prev) => ({ ...prev, [id]: "" }));
+      } else {
+        setError(data.error ?? "Couldn't send reply.");
+      }
+    } finally {
+      setSendingReplyId(null);
     }
   };
 
@@ -166,6 +194,8 @@ export default function AdminSupportPage() {
           ))}
         </div>
 
+        {error && <p className="text-sm text-[#E0716B] mb-4">{error}</p>}
+
         {visibleTickets.length === 0 ? (
           <p className="text-sm text-[#B8B2A2]">No {filter !== "all" ? filter : ""} tickets right now.</p>
         ) : (
@@ -174,7 +204,18 @@ export default function AdminSupportPage() {
               <div key={t.id} className="rounded-lg border border-white/10 bg-[#161A20] p-5">
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
-                    <p className="text-sm font-semibold">{t.subject}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold">{t.subject}</p>
+                      {t.isMember ? (
+                        <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full border border-[#C9A227]/50 text-[#C9A227]">
+                          Member
+                        </span>
+                      ) : (
+                        <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full border border-white/20 text-[#B8B2A2]">
+                          Not a Member
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-[#B8B2A2] mt-0.5">
                       {t.name} · {t.email}
                     </p>
@@ -193,18 +234,56 @@ export default function AdminSupportPage() {
                     {t.status}
                   </span>
                 </div>
+
                 <p className="text-sm text-[#F1ECDF] mb-4 whitespace-pre-wrap leading-relaxed">
                   {t.message}
                 </p>
-                <button
-                  onClick={() =>
-                    handleStatusChange(t.id, t.status === "open" ? "resolved" : "open")
-                  }
-                  disabled={actioningId === t.id}
-                  className="rounded-md border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-wider hover:border-[#C9A227] transition disabled:opacity-60"
-                >
-                  {t.status === "open" ? "Mark Resolved" : "Reopen"}
-                </button>
+
+                {t.reply && (
+                  <div className="rounded-md border border-[#1F6F6B]/40 bg-[#12151A] p-3 mb-4">
+                    <p className="text-[10px] uppercase tracking-wider text-[#1F6F6B] mb-1">
+                      Your Reply · {t.repliedAt ? new Date(t.repliedAt).toLocaleString() : ""}
+                    </p>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{t.reply}</p>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <button
+                    onClick={() =>
+                      handleStatusChange(t.id, t.status === "open" ? "resolved" : "open")
+                    }
+                    disabled={actioningId === t.id}
+                    className="rounded-md border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-wider hover:border-[#C9A227] transition disabled:opacity-60"
+                  >
+                    {t.status === "open" ? "Mark Resolved" : "Reopen"}
+                  </button>
+                </div>
+
+                {t.isMember ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={replyDrafts[t.id] ?? ""}
+                      onChange={(e) =>
+                        setReplyDrafts((prev) => ({ ...prev, [t.id]: e.target.value }))
+                      }
+                      rows={3}
+                      placeholder={t.reply ? "Send a follow-up reply…" : "Write a reply…"}
+                      className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227] resize-none"
+                    />
+                    <button
+                      onClick={() => handleSendReply(t.id)}
+                      disabled={sendingReplyId === t.id || !replyDrafts[t.id]?.trim()}
+                      className="rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-4 py-2 text-xs uppercase tracking-wider hover:brightness-110 transition disabled:opacity-50"
+                    >
+                      {sendingReplyId === t.id ? "Sending…" : "Send Reply"}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#B8B2A2] italic">
+                    Reply unavailable — this sender isn&rsquo;t an approved member.
+                  </p>
+                )}
               </div>
             ))}
           </div>

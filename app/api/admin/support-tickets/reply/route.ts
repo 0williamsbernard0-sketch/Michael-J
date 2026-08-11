@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { replyToTicket, listTickets } from "@/lib/support-store";
+import { sendSupportReplyEmail } from "@/lib/email";
 
 function isAuthorized(req: NextRequest) {
   const secret = process.env.ADMIN_SECRET;
@@ -39,8 +40,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Couldn't save the reply." }, { status: 500 });
     }
 
-    // TODO: swap this for the existing Resend call once shared —
-    // send `reply` to updated.email, referencing updated.subject.
+    await sendSupportReplyEmail({
+      name: updated.name,
+      email: updated.email,
+      subject: updated.subject,
+      originalMessage: updated.message,
+      reply,
+    });
 
     return NextResponse.json({ ticket: updated });
   } catch (err) {

@@ -50,7 +50,6 @@ export async function sendAdminSignupNotification(params: {
       `,
     });
   } catch (err) {
-    // Never let an email failure break the payment webhook itself.
     console.error("Failed to send admin signup notification:", err);
   }
 }
@@ -79,6 +78,44 @@ export async function sendMemberApprovalEmail(params: { name: string; email: str
     });
   } catch (err) {
     console.error("Failed to send member approval email:", err);
+  }
+}
+
+export async function sendSupportReplyEmail(params: {
+  name: string;
+  email: string;
+  subject: string;
+  originalMessage: string;
+  reply: string;
+}) {
+  const fromAddress = process.env.EMAIL_FROM || "onboarding@resend.dev";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+  try {
+    await resend.emails.send({
+      from: fromAddress,
+      to: params.email,
+      subject: `Re: ${params.subject} — MBJ Society Support`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px;">
+          <h2 style="color: #12151A;">Hi ${escapeHtml(params.name)},</h2>
+          <p>The MBJ Society team replied to your support message:</p>
+          <div style="background:#F5F5F5;border-left:3px solid #C9A227;padding:12px 16px;margin:16px 0;white-space:pre-wrap;">${escapeHtml(params.reply)}</div>
+          <p style="color:#666;font-size:13px;margin-top:24px;">
+            Your original message:<br />
+            <span style="white-space:pre-wrap;">${escapeHtml(params.originalMessage)}</span>
+          </p>
+          <p style="margin-top: 24px;">
+            <a href="${siteUrl}/support"
+               style="background:#C9A227;color:#12151A;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600;">
+              Visit Support
+            </a>
+          </p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("Failed to send support reply email:", err);
   }
 }
 

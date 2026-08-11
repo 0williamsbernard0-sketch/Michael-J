@@ -15,6 +15,7 @@ interface MessageRow {
   created_at: string;
   attachment_url: string | null;
   attachment_name: string | null;
+  source: "fellowship" | "support";
 }
 
 export default function MessagesPage() {
@@ -160,7 +161,11 @@ function Inbox() {
                     }`}
                   >
                     <p className="text-[10px] uppercase tracking-wide text-[#B8B2A2] mb-1">
-                      {m.sender === "admin" ? "MBJ Society" : "You"}
+                      {m.sender === "admin"
+                        ? m.source === "support"
+                          ? "Support Team"
+                          : "MBJ Society"
+                        : "You"}
                     </p>
                     {m.body}
                     {m.attachment_url && (

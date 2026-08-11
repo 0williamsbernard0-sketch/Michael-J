@@ -21,8 +21,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "id and reply are required." }, { status: 400 });
     }
 
-    // Enforce members-only replies at the API boundary, not just in the UI —
-    // find the ticket first to check isMember before writing anything.
     const all = await listTickets();
     const target = all.find((t) => t.id === id);
 
@@ -46,8 +44,12 @@ export async function POST(req: NextRequest) {
     // is reused generically here as a thread key — it holds the ticket id,
     // not an actual fellowship proposal id, for support-sourced threads.
     // `source: 'support'` is what lets the UI label this correctly.
+    // `email` is REQUIRED — the messages RLS policy only allows a member
+    // to see rows where email = their own auth email, so without this
+    // the reply would insert but never be visible to them.
     const supabase = getSupabaseAdmin();
     const { error: msgError } = await supabase.from("messages").insert({
+      email: updated.email,
       related_proposal_id: updated.id,
       sender: "admin",
       subject: `Support: ${updated.subject}`,
@@ -56,8 +58,6 @@ export async function POST(req: NextRequest) {
       source: "support",
     });
     if (msgError) {
-      // Reply is already saved on the ticket — don't fail the whole
-      // request just because the inbox copy failed. Log for now.
       console.error("Failed to insert support reply into messages inbox:", msgError);
     }
 

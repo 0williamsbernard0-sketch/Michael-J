@@ -6,8 +6,8 @@ import Countdown from "@/components/Countdown";
 import { useCouponWallet } from "@/lib/coupon-client";
 import { useAuth } from "@/lib/auth-context";
 
-const NEXT_SESSION = new Date("2026-08-22T19:00:00-04:00");
-const NEXT_SESSION_ID = "session-2026-08-22"; // must match the row you inserted in livestream_sessions
+const NEXT_SESSION = new Date("2026-08-24T19:00:00-04:00");
+const NEXT_SESSION_ID = "session-2026-08-24"; // must match the row you inserted in livestream_sessions
 
 const PAST_STREAMS = [
   { id: "may-qa", title: "May Members Q&A", meta: "312 members watched", duration: "45:00" },

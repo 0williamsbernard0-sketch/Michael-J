@@ -31,7 +31,6 @@ export default function DashboardPage() {
   return (
   <div className="min-h-screen bg-[#12151A] text-[#F1ECDF] font-body">
     <Nav />
-    <ScamWarningToast />
 
       {/* ---------- HERO ---------- */}
       <section className="relative pt-28 sm:pt-32 pb-20 px-5 sm:px-10 overflow-hidden min-h-[680px] flex items-end">

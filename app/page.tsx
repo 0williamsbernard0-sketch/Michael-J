@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import ScamWarningToast from "@/components/ScamWarningToast";
 import { useState } from "react";
 import Nav from "@/components/Nav";
 import LockGate from "@/components/LockGate";

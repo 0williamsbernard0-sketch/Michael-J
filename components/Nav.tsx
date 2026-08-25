@@ -7,6 +7,7 @@ import MessagesBell from "@/components/MessagesBell";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard" },
+  { href: "/fan-gallery", label: "Fan Gallery" },
   { href: "/videos", label: "Videos" },
   { href: "/photos", label: "Photos" },
   { href: "/livestreams", label: "Live Sessions" },
@@ -19,7 +20,6 @@ const NAV_ITEMS = [
   { href: "/coupons", label: "Coupons" },
   { href: "/messages", label: "Messages" },
   { href: "/support", label: "Support" },
-  { href: "/fan-gallery", label: "Fan Gallery" },
 ];
 
 export default function Nav() {

@@ -248,6 +248,12 @@ export default function AdminSupportPage() {
                   </div>
                 )}
 
+                {!t.isMember && (
+                  <p className="text-[10px] text-[#B8B2A2] italic mb-3">
+                    Not an approved member — reply will be sent by email only, no site login for them to view it in.
+                  </p>
+                )}
+
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <button
                     onClick={() =>
@@ -260,30 +266,24 @@ export default function AdminSupportPage() {
                   </button>
                 </div>
 
-                {t.isMember ? (
-                  <div className="space-y-2">
-                    <textarea
-                      value={replyDrafts[t.id] ?? ""}
-                      onChange={(e) =>
-                        setReplyDrafts((prev) => ({ ...prev, [t.id]: e.target.value }))
-                      }
-                      rows={3}
-                      placeholder={t.reply ? "Send a follow-up reply…" : "Write a reply…"}
-                      className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227] resize-none"
-                    />
-                    <button
-                      onClick={() => handleSendReply(t.id)}
-                      disabled={sendingReplyId === t.id || !replyDrafts[t.id]?.trim()}
-                      className="rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-4 py-2 text-xs uppercase tracking-wider hover:brightness-110 transition disabled:opacity-50"
-                    >
-                      {sendingReplyId === t.id ? "Sending…" : "Send Reply"}
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-xs text-[#B8B2A2] italic">
-                    Reply unavailable — this sender isn&rsquo;t an approved member.
-                  </p>
-                )}
+                <div className="space-y-2">
+                  <textarea
+                    value={replyDrafts[t.id] ?? ""}
+                    onChange={(e) =>
+                      setReplyDrafts((prev) => ({ ...prev, [t.id]: e.target.value }))
+                    }
+                    rows={3}
+                    placeholder={t.reply ? "Send a follow-up reply…" : "Write a reply…"}
+                    className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227] resize-none"
+                  />
+                  <button
+                    onClick={() => handleSendReply(t.id)}
+                    disabled={sendingReplyId === t.id || !replyDrafts[t.id]?.trim()}
+                    className="rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-4 py-2 text-xs uppercase tracking-wider hover:brightness-110 transition disabled:opacity-50"
+                  >
+                    {sendingReplyId === t.id ? "Sending…" : "Send Reply"}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

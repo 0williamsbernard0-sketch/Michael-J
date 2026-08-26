@@ -119,6 +119,37 @@ export async function sendSupportReplyEmail(params: {
   }
 }
 
+export async function sendAdminDirectEmail(params: {
+  name?: string;
+  email: string;
+  subject: string;
+  message: string;
+}) {
+  const fromAddress = process.env.EMAIL_FROM || "onboarding@resend.dev";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  // Unlike the other senders here, this one throws instead of swallowing
+  // the error — the admin is sending a one-off message with no ticket
+  // behind it, so if it fails they need to know immediately rather than
+  // seeing a silent success.
+  await resend.emails.send({
+    from: fromAddress,
+    to: params.email,
+    subject: params.subject,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px;">
+        <h2 style="color: #12151A;">Hi ${escapeHtml(params.name || "there")},</h2>
+        <div style="white-space:pre-wrap;line-height:1.6;">${escapeHtml(params.message)}</div>
+        <p style="margin-top: 24px;">
+          <a href="${siteUrl}"
+             style="background:#C9A227;color:#12151A;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600;">
+            Visit The MBJ Society
+          </a>
+        </p>
+      </div>
+    `,
+  });
+}
+
 function escapeHtml(str: string) {
   return str
     .replace(/&/g, "&amp;")

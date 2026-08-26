@@ -17,6 +17,15 @@ interface SupportTicket {
   isMember: boolean;
 }
 
+interface DirectMessage {
+  id: string;
+  name: string | null;
+  email: string;
+  subject: string;
+  message: string;
+  sentAt: string;
+}
+
 export default function AdminSupportPage() {
   const [secret, setSecret] = useState("");
   const [unlocked, setUnlocked] = useState(false);
@@ -36,6 +45,8 @@ export default function AdminSupportPage() {
   const [directMessage, setDirectMessage] = useState("");
   const [directStatus, setDirectStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [directError, setDirectError] = useState<string | null>(null);
+  const [directHistory, setDirectHistory] = useState<DirectMessage[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   const fetchTickets = async (secretValue: string) => {
     setLoading(true);
@@ -58,6 +69,20 @@ export default function AdminSupportPage() {
       setError("Network error — please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDirectHistory = async (secretValue: string) => {
+    try {
+      const res = await fetch("/api/admin/direct-message", {
+        headers: { "x-admin-secret": secretValue },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setDirectHistory(data.messages);
+      }
+    } finally {
+      setHistoryLoaded(true);
     }
   };
 
@@ -148,6 +173,7 @@ export default function AdminSupportPage() {
         return;
       }
       setDirectStatus("sent");
+      setDirectHistory((prev) => [data.message, ...prev]);
       setDirectName("");
       setDirectEmail("");
       setDirectSubject("");
@@ -157,6 +183,18 @@ export default function AdminSupportPage() {
       setDirectStatus("error");
     }
   };
+
+  const toggleDirectPanel = () => {
+    const next = !directOpen;
+    setDirectOpen(next);
+    if (next && !historyLoaded) {
+      fetchDirectHistory(secret);
+    }
+  };
+
+  const priorMessagesToEmail = directEmail.trim()
+    ? directHistory.filter((m) => m.email.toLowerCase() === directEmail.trim().toLowerCase())
+    : [];
 
   const visibleTickets = tickets.filter((t) => filter === "all" || t.status === filter);
 
@@ -219,7 +257,7 @@ export default function AdminSupportPage() {
             signups) who hasn't submitted a support ticket */}
         <div className="rounded-lg border border-white/10 bg-[#161A20] p-5 mb-8">
           <button
-            onClick={() => setDirectOpen((o) => !o)}
+            onClick={toggleDirectPanel}
             className="flex items-center justify-between w-full text-left"
           >
             <div>
@@ -233,65 +271,106 @@ export default function AdminSupportPage() {
           </button>
 
           {directOpen && (
-            <form onSubmit={handleSendDirect} className="space-y-3 mt-5">
-              <div className="grid sm:grid-cols-2 gap-3">
+            <>
+              <form onSubmit={handleSendDirect} className="space-y-3 mt-5">
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-[#B8B2A2] mb-1.5">Name (optional)</label>
+                    <input
+                      type="text"
+                      value={directName}
+                      onChange={(e) => setDirectName(e.target.value)}
+                      className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227]"
+                      placeholder="Their name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[#B8B2A2] mb-1.5">Email</label>
+                    <input
+                      type="email"
+                      value={directEmail}
+                      onChange={(e) => setDirectEmail(e.target.value)}
+                      className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227]"
+                      placeholder="them@example.com"
+                    />
+                  </div>
+                </div>
+
+                {priorMessagesToEmail.length > 0 && (
+                  <p className="text-xs text-[#C9A227]">
+                    You've already messaged this address {priorMessagesToEmail.length}{" "}
+                    time{priorMessagesToEmail.length > 1 ? "s" : ""} before — see history below.
+                  </p>
+                )}
+
                 <div>
-                  <label className="block text-xs text-[#B8B2A2] mb-1.5">Name (optional)</label>
+                  <label className="block text-xs text-[#B8B2A2] mb-1.5">Subject</label>
                   <input
                     type="text"
-                    value={directName}
-                    onChange={(e) => setDirectName(e.target.value)}
+                    value={directSubject}
+                    onChange={(e) => setDirectSubject(e.target.value)}
                     className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227]"
-                    placeholder="Their name"
+                    placeholder="What's this about?"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs text-[#B8B2A2] mb-1.5">Email</label>
-                  <input
-                    type="email"
-                    value={directEmail}
-                    onChange={(e) => setDirectEmail(e.target.value)}
-                    className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227]"
-                    placeholder="them@example.com"
+                  <label className="block text-xs text-[#B8B2A2] mb-1.5">Message</label>
+                  <textarea
+                    value={directMessage}
+                    onChange={(e) => setDirectMessage(e.target.value)}
+                    rows={4}
+                    className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227] resize-none"
+                    placeholder="Write your message…"
                   />
                 </div>
+
+                {directError && <p className="text-sm text-[#E0716B]">{directError}</p>}
+                {directStatus === "sent" && (
+                  <p className="text-sm text-[#1F6F6B]">Sent.</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={directStatus === "sending"}
+                  className="rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-2.5 text-xs uppercase tracking-wider hover:brightness-110 transition disabled:opacity-60"
+                >
+                  {directStatus === "sending" ? "Sending…" : "Send Email"}
+                </button>
+              </form>
+
+              <div className="mt-6 pt-5 border-t border-white/10">
+                <p className="text-[10px] uppercase tracking-wider text-[#B8B2A2] mb-3">
+                  Sent History
+                </p>
+                {directHistory.length === 0 ? (
+                  <p className="text-xs text-[#B8B2A2]">No direct messages sent yet.</p>
+                ) : (
+                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                    {directHistory.map((m) => (
+                      <div
+                        key={m.id}
+                        className="rounded-md border border-white/10 bg-[#0C0E12] p-3"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs font-semibold truncate">{m.subject}</p>
+                          <p className="text-[10px] text-[#B8B2A2] shrink-0">
+                            {new Date(m.sentAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <p className="text-[10px] text-[#B8B2A2] mt-0.5">
+                          {m.name ? `${m.name} · ` : ""}
+                          {m.email}
+                        </p>
+                        <p className="text-xs mt-1.5 whitespace-pre-wrap leading-relaxed line-clamp-3">
+                          {m.message}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-
-              <div>
-                <label className="block text-xs text-[#B8B2A2] mb-1.5">Subject</label>
-                <input
-                  type="text"
-                  value={directSubject}
-                  onChange={(e) => setDirectSubject(e.target.value)}
-                  className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227]"
-                  placeholder="What's this about?"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-[#B8B2A2] mb-1.5">Message</label>
-                <textarea
-                  value={directMessage}
-                  onChange={(e) => setDirectMessage(e.target.value)}
-                  rows={4}
-                  className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227] resize-none"
-                  placeholder="Write your message…"
-                />
-              </div>
-
-              {directError && <p className="text-sm text-[#E0716B]">{directError}</p>}
-              {directStatus === "sent" && (
-                <p className="text-sm text-[#1F6F6B]">Sent.</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={directStatus === "sending"}
-                className="rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-2.5 text-xs uppercase tracking-wider hover:brightness-110 transition disabled:opacity-60"
-              >
-                {directStatus === "sending" ? "Sending…" : "Send Email"}
-              </button>
-            </form>
+            </>
           )}
         </div>
 

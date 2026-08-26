@@ -28,6 +28,15 @@ export default function AdminSupportPage() {
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [sendingReplyId, setSendingReplyId] = useState<string | null>(null);
 
+  // Direct-message-by-email composer (no ticket required)
+  const [directOpen, setDirectOpen] = useState(false);
+  const [directName, setDirectName] = useState("");
+  const [directEmail, setDirectEmail] = useState("");
+  const [directSubject, setDirectSubject] = useState("");
+  const [directMessage, setDirectMessage] = useState("");
+  const [directStatus, setDirectStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [directError, setDirectError] = useState<string | null>(null);
+
   const fetchTickets = async (secretValue: string) => {
     setLoading(true);
     setError(null);
@@ -110,6 +119,45 @@ export default function AdminSupportPage() {
     }
   };
 
+  const handleSendDirect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!directEmail.trim() || !directSubject.trim() || !directMessage.trim()) {
+      setDirectError("Email, subject, and message are all required.");
+      return;
+    }
+    setDirectStatus("sending");
+    setDirectError(null);
+    try {
+      const res = await fetch("/api/admin/direct-message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-secret": secret,
+        },
+        body: JSON.stringify({
+          name: directName.trim() || undefined,
+          email: directEmail.trim(),
+          subject: directSubject.trim(),
+          message: directMessage.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDirectError(data.error ?? "Couldn't send message.");
+        setDirectStatus("error");
+        return;
+      }
+      setDirectStatus("sent");
+      setDirectName("");
+      setDirectEmail("");
+      setDirectSubject("");
+      setDirectMessage("");
+    } catch {
+      setDirectError("Network error — please try again.");
+      setDirectStatus("error");
+    }
+  };
+
   const visibleTickets = tickets.filter((t) => filter === "all" || t.status === filter);
 
   if (!unlocked) {
@@ -165,6 +213,86 @@ export default function AdminSupportPage() {
           <span className="text-sm font-semibold pb-3 border-b-2 border-[#C9A227] text-[#C9A227]">
             Support Tickets
           </span>
+        </div>
+
+        {/* Direct message composer — for emailing anyone (e.g. incomplete
+            signups) who hasn't submitted a support ticket */}
+        <div className="rounded-lg border border-white/10 bg-[#161A20] p-5 mb-8">
+          <button
+            onClick={() => setDirectOpen((o) => !o)}
+            className="flex items-center justify-between w-full text-left"
+          >
+            <div>
+              <h2 className="font-display text-lg">Message Someone Directly</h2>
+              <p className="text-xs text-[#B8B2A2] mt-0.5">
+                Email anyone by address — no ticket needed. Useful for reaching people who
+                started signing up but never finished.
+              </p>
+            </div>
+            <span className="text-xs text-[#B8B2A2] shrink-0 ml-4">{directOpen ? "Hide" : "Open"}</span>
+          </button>
+
+          {directOpen && (
+            <form onSubmit={handleSendDirect} className="space-y-3 mt-5">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-[#B8B2A2] mb-1.5">Name (optional)</label>
+                  <input
+                    type="text"
+                    value={directName}
+                    onChange={(e) => setDirectName(e.target.value)}
+                    className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227]"
+                    placeholder="Their name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-[#B8B2A2] mb-1.5">Email</label>
+                  <input
+                    type="email"
+                    value={directEmail}
+                    onChange={(e) => setDirectEmail(e.target.value)}
+                    className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227]"
+                    placeholder="them@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-[#B8B2A2] mb-1.5">Subject</label>
+                <input
+                  type="text"
+                  value={directSubject}
+                  onChange={(e) => setDirectSubject(e.target.value)}
+                  className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227]"
+                  placeholder="What's this about?"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-[#B8B2A2] mb-1.5">Message</label>
+                <textarea
+                  value={directMessage}
+                  onChange={(e) => setDirectMessage(e.target.value)}
+                  rows={4}
+                  className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227] resize-none"
+                  placeholder="Write your message…"
+                />
+              </div>
+
+              {directError && <p className="text-sm text-[#E0716B]">{directError}</p>}
+              {directStatus === "sent" && (
+                <p className="text-sm text-[#1F6F6B]">Sent.</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={directStatus === "sending"}
+                className="rounded-md bg-[#C9A227] text-[#12151A] font-semibold px-5 py-2.5 text-xs uppercase tracking-wider hover:brightness-110 transition disabled:opacity-60"
+              >
+                {directStatus === "sending" ? "Sending…" : "Send Email"}
+              </button>
+            </form>
+          )}
         </div>
 
         <div className="flex items-center justify-between mb-4">

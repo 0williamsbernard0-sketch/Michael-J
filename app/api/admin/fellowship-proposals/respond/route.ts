@@ -14,13 +14,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { id, email, status, subject, body } = (await req.json()) as {
-      id: string;
-      email: string;
-      status: ProposalStatus;
-      subject: string;
-      body: string;
-    };
+    const { id, email, status, subject, body, attachmentUrl, attachmentName } =
+      (await req.json()) as {
+        id: string;
+        email: string;
+        status: ProposalStatus;
+        subject: string;
+        body: string;
+        attachmentUrl?: string | null;
+        attachmentName?: string | null;
+      };
 
     if (!id || !email || !status || !subject || !body) {
       return NextResponse.json({ error: "Missing fields." }, { status: 400 });
@@ -31,7 +34,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Proposal not found." }, { status: 404 });
     }
 
-    await sendMessage({ email, subject, body, relatedProposalId: id });
+    await sendMessage({
+      email,
+      subject,
+      body,
+      relatedProposalId: id,
+      attachmentUrl,
+      attachmentName,
+    });
 
     return NextResponse.json({ proposal });
   } catch {

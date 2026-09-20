@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import { uploadAdminAttachment } from "@/lib/admin-attachment-upload";
 
 interface Proposal {
   id: string;
@@ -50,6 +51,7 @@ export default function AdminProposalsPage() {
   const [replyStatus, setReplyStatus] = useState<Record<string, Proposal["status"]>>({});
   const [replySubject, setReplySubject] = useState<Record<string, string>>({});
   const [replyBody, setReplyBody] = useState<Record<string, string>>({});
+  const [replyFile, setReplyFile] = useState<Record<string, File | null>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [threads, setThreads] = useState<Record<string, ThreadMessage[]>>({});
   const [threadLoading, setThreadLoading] = useState<string | null>(null);
@@ -123,10 +125,27 @@ export default function AdminProposalsPage() {
 
     setSendingId(p.id);
     try {
+      let attachmentUrl: string | null = null;
+      let attachmentName: string | null = null;
+      const file = replyFile[p.id];
+      if (file) {
+        const uploaded = await uploadAdminAttachment(file, `proposals/${p.id}`, secret);
+        attachmentUrl = uploaded.attachmentUrl;
+        attachmentName = uploaded.attachmentName;
+      }
+
       const res = await fetch("/api/admin/fellowship-proposals/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-secret": secret },
-        body: JSON.stringify({ id: p.id, email: p.email, status, subject, body }),
+        body: JSON.stringify({
+          id: p.id,
+          email: p.email,
+          status,
+          subject,
+          body,
+          attachmentUrl,
+          attachmentName,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -134,6 +153,7 @@ export default function AdminProposalsPage() {
         setOpenId(null);
         setReplySubject((s) => ({ ...s, [p.id]: "" }));
         setReplyBody((b) => ({ ...b, [p.id]: "" }));
+        setReplyFile((f) => ({ ...f, [p.id]: null }));
         setThreads((t) => {
           const copy = { ...t };
           delete copy[p.id];
@@ -142,6 +162,8 @@ export default function AdminProposalsPage() {
       } else {
         alert("Couldn't send response.");
       }
+    } catch {
+      alert("Couldn't send response.");
     } finally {
       setSendingId(null);
     }
@@ -311,6 +333,28 @@ export default function AdminProposalsPage() {
                         placeholder="Write your response…"
                         className="w-full rounded-md bg-[#12151A] border border-white/10 px-4 py-2.5 text-sm resize-none"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-[#B8B2A2] mb-1.5">Attachment (optional)</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file"
+                          accept="image/*,.pdf,.doc,.docx"
+                          onChange={(e) =>
+                            setReplyFile((f) => ({ ...f, [p.id]: e.target.files?.[0] ?? null }))
+                          }
+                          className="text-xs text-[#B8B2A2] flex-1"
+                        />
+                        {replyFile[p.id] && (
+                          <button
+                            onClick={() => setReplyFile((f) => ({ ...f, [p.id]: null }))}
+                            className="text-xs text-[#E0716B]"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <button

@@ -13,6 +13,8 @@ export interface SupportTicket {
   reply: string | null;
   repliedAt: string | null;
   isMember: boolean;
+  replyAttachmentUrl: string | null;
+  replyAttachmentName: string | null;
 }
 
 function fromRow(row: any, memberEmails: Set<string>): SupportTicket {
@@ -27,6 +29,8 @@ function fromRow(row: any, memberEmails: Set<string>): SupportTicket {
     reply: row.reply ?? null,
     repliedAt: row.replied_at ?? null,
     isMember: memberEmails.has(row.email.toLowerCase()),
+    replyAttachmentUrl: row.reply_attachment_url ?? null,
+    replyAttachmentName: row.reply_attachment_name ?? null,
   };
 }
 
@@ -99,19 +103,27 @@ export async function setTicketStatus(
 }
 
 /**
- * Records the admin's reply. Does NOT check membership itself — the
- * calling route is responsible for verifying isMember before allowing
- * this, so the restriction lives at the API boundary, not buried here.
+ * Records the admin's reply, with an optional attachment. Does NOT check
+ * membership itself — the calling route is responsible for verifying
+ * isMember before allowing this, so the restriction lives at the API
+ * boundary, not buried here.
  */
 export async function replyToTicket(
   id: string,
-  reply: string
+  reply: string,
+  attachmentUrl?: string | null,
+  attachmentName?: string | null
 ): Promise<SupportTicket | null> {
   const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
     .from("support_tickets")
-    .update({ reply, replied_at: new Date().toISOString() })
+    .update({
+      reply,
+      replied_at: new Date().toISOString(),
+      reply_attachment_url: attachmentUrl ?? null,
+      reply_attachment_name: attachmentName ?? null,
+    })
     .eq("id", id)
     .select()
     .single();

@@ -14,7 +14,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   try {
-    const { id, reply } = (await req.json()) as { id: string; reply: string };
+    const { id, reply, attachmentUrl, attachmentName } = (await req.json()) as {
+      id: string;
+      reply: string;
+      attachmentUrl?: string | null;
+      attachmentName?: string | null;
+    };
     if (!id || !reply) {
       return NextResponse.json({ error: "id and reply are required." }, { status: 400 });
     }
@@ -25,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Ticket not found." }, { status: 404 });
     }
 
-    const updated = await replyToTicket(id, reply);
+    const updated = await replyToTicket(id, reply, attachmentUrl, attachmentName);
     if (!updated) {
       return NextResponse.json({ error: "Couldn't save the reply." }, { status: 500 });
     }
@@ -44,6 +49,8 @@ export async function POST(req: NextRequest) {
         body: reply,
         read: false,
         source: "support",
+        attachment_url: attachmentUrl ?? null,
+        attachment_name: attachmentName ?? null,
       });
       if (msgError) {
         console.error("Failed to insert support reply into messages inbox:", msgError);
@@ -57,6 +64,8 @@ export async function POST(req: NextRequest) {
       subject: updated.subject,
       originalMessage: updated.message,
       reply,
+      attachmentUrl,
+      attachmentName,
     });
 
     return NextResponse.json({ ticket: updated });

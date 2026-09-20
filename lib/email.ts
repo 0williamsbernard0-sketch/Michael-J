@@ -87,6 +87,8 @@ export async function sendSupportReplyEmail(params: {
   subject: string;
   originalMessage: string;
   reply: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
 }) {
   const fromAddress = process.env.EMAIL_FROM || "onboarding@resend.dev";
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -101,6 +103,11 @@ export async function sendSupportReplyEmail(params: {
           <h2 style="color: #12151A;">Hi ${escapeHtml(params.name)},</h2>
           <p>The MBJ Society team replied to your support message:</p>
           <div style="background:#F5F5F5;border-left:3px solid #C9A227;padding:12px 16px;margin:16px 0;white-space:pre-wrap;">${escapeHtml(params.reply)}</div>
+          ${
+            params.attachmentUrl
+              ? `<p><a href="${params.attachmentUrl}" style="color:#C9A227;text-decoration:none;">📎 ${escapeHtml(params.attachmentName ?? "View attachment")}</a></p>`
+              : ""
+          }
           <p style="color:#666;font-size:13px;margin-top:24px;">
             Your original message:<br />
             <span style="white-space:pre-wrap;">${escapeHtml(params.originalMessage)}</span>
@@ -124,6 +131,8 @@ export async function sendAdminDirectEmail(params: {
   email: string;
   subject: string;
   message: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
 }) {
   const fromAddress = process.env.EMAIL_FROM || "onboarding@resend.dev";
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -139,6 +148,11 @@ export async function sendAdminDirectEmail(params: {
       <div style="font-family: sans-serif; max-width: 480px;">
         <h2 style="color: #12151A;">Hi ${escapeHtml(params.name || "there")},</h2>
         <div style="white-space:pre-wrap;line-height:1.6;">${escapeHtml(params.message)}</div>
+        ${
+          params.attachmentUrl
+            ? `<p><a href="${params.attachmentUrl}" style="color:#C9A227;text-decoration:none;">📎 ${escapeHtml(params.attachmentName ?? "View attachment")}</a></p>`
+            : ""
+        }
         <p style="margin-top: 24px;">
           <a href="${siteUrl}"
              style="background:#C9A227;color:#12151A;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600;">

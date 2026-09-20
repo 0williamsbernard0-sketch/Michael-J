@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendAdminDirectEmail } from "@/lib/email";
-import { logDirectMessage, listDirectMessages } from "@/lib/direct-messages-store";
+import { logDirectMessage, listDirectMessages } from "@/lib/direct-message-store";
 
 function isAuthorized(req: NextRequest) {
   const secret = process.env.ADMIN_SECRET;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import { uploadAdminAttachment } from "@/lib/admin-attachment-upload";
 
 interface SupportTicket {
   id: string;
@@ -15,6 +16,8 @@ interface SupportTicket {
   reply: string | null;
   repliedAt: string | null;
   isMember: boolean;
+  replyAttachmentUrl?: string | null;
+  replyAttachmentName?: string | null;
 }
 
 interface DirectMessage {
@@ -35,6 +38,7 @@ export default function AdminSupportPage() {
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"open" | "resolved" | "all">("open");
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyFiles, setReplyFiles] = useState<Record<string, File | null>>({});
   const [sendingReplyId, setSendingReplyId] = useState<string | null>(null);
 
   // Direct-message-by-email composer (no ticket required)
@@ -43,6 +47,7 @@ export default function AdminSupportPage() {
   const [directEmail, setDirectEmail] = useState("");
   const [directSubject, setDirectSubject] = useState("");
   const [directMessage, setDirectMessage] = useState("");
+  const [directFile, setDirectFile] = useState<File | null>(null);
   const [directStatus, setDirectStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [directError, setDirectError] = useState<string | null>(null);
   const [directHistory, setDirectHistory] = useState<DirectMessage[]>([]);
@@ -124,21 +129,33 @@ export default function AdminSupportPage() {
     if (!reply) return;
     setSendingReplyId(id);
     try {
+      let attachmentUrl: string | null = null;
+      let attachmentName: string | null = null;
+      const file = replyFiles[id];
+      if (file) {
+        const uploaded = await uploadAdminAttachment(file, `support/${id}`, secret);
+        attachmentUrl = uploaded.attachmentUrl;
+        attachmentName = uploaded.attachmentName;
+      }
+
       const res = await fetch("/api/admin/support-tickets/reply", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-admin-secret": secret,
         },
-        body: JSON.stringify({ id, reply }),
+        body: JSON.stringify({ id, reply, attachmentUrl, attachmentName }),
       });
       const data = await res.json();
       if (res.ok) {
         setTickets((prev) => prev.map((t) => (t.id === id ? data.ticket : t)));
         setReplyDrafts((prev) => ({ ...prev, [id]: "" }));
+        setReplyFiles((prev) => ({ ...prev, [id]: null }));
       } else {
         setError(data.error ?? "Couldn't send reply.");
       }
+    } catch {
+      setError("Couldn't send reply.");
     } finally {
       setSendingReplyId(null);
     }
@@ -153,6 +170,14 @@ export default function AdminSupportPage() {
     setDirectStatus("sending");
     setDirectError(null);
     try {
+      let attachmentUrl: string | null = null;
+      let attachmentName: string | null = null;
+      if (directFile) {
+        const uploaded = await uploadAdminAttachment(directFile, "direct", secret);
+        attachmentUrl = uploaded.attachmentUrl;
+        attachmentName = uploaded.attachmentName;
+      }
+
       const res = await fetch("/api/admin/direct-message", {
         method: "POST",
         headers: {
@@ -164,6 +189,8 @@ export default function AdminSupportPage() {
           email: directEmail.trim(),
           subject: directSubject.trim(),
           message: directMessage.trim(),
+          attachmentUrl,
+          attachmentName,
         }),
       });
       const data = await res.json();
@@ -178,6 +205,7 @@ export default function AdminSupportPage() {
       setDirectEmail("");
       setDirectSubject("");
       setDirectMessage("");
+      setDirectFile(null);
     } catch {
       setDirectError("Network error — please try again.");
       setDirectStatus("error");
@@ -325,6 +353,27 @@ export default function AdminSupportPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-xs text-[#B8B2A2] mb-1.5">Attachment (optional)</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={(e) => setDirectFile(e.target.files?.[0] ?? null)}
+                      className="text-xs text-[#B8B2A2] flex-1"
+                    />
+                    {directFile && (
+                      <button
+                        type="button"
+                        onClick={() => setDirectFile(null)}
+                        className="text-xs text-[#E0716B]"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {directError && <p className="text-sm text-[#E0716B]">{directError}</p>}
                 {directStatus === "sent" && (
                   <p className="text-sm text-[#1F6F6B]">Sent.</p>
@@ -452,6 +501,16 @@ export default function AdminSupportPage() {
                       Your Reply · {t.repliedAt ? new Date(t.repliedAt).toLocaleString() : ""}
                     </p>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{t.reply}</p>
+                    {t.replyAttachmentUrl && (
+                      <a
+                        href={t.replyAttachmentUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block mt-2 text-xs text-[#C9A227] underline"
+                      >
+                        📎 {t.replyAttachmentName ?? "View attachment"}
+                      </a>
+                    )}
                   </div>
                 )}
 
@@ -483,6 +542,24 @@ export default function AdminSupportPage() {
                     placeholder={t.reply ? "Send a follow-up reply…" : "Write a reply…"}
                     className="w-full rounded-md bg-[#0C0E12] border border-white/10 px-3 py-2.5 text-sm outline-none focus:border-[#C9A227] resize-none"
                   />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={(e) =>
+                        setReplyFiles((prev) => ({ ...prev, [t.id]: e.target.files?.[0] ?? null }))
+                      }
+                      className="text-xs text-[#B8B2A2] flex-1"
+                    />
+                    {replyFiles[t.id] && (
+                      <button
+                        onClick={() => setReplyFiles((prev) => ({ ...prev, [t.id]: null }))}
+                        className="text-xs text-[#E0716B]"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                   <button
                     onClick={() => handleSendReply(t.id)}
                     disabled={sendingReplyId === t.id || !replyDrafts[t.id]?.trim()}

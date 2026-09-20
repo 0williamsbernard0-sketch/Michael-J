@@ -7,6 +7,8 @@ export interface DirectMessage {
   subject: string;
   message: string;
   sentAt: string;
+  attachmentUrl: string | null;
+  attachmentName: string | null;
 }
 
 function fromRow(row: any): DirectMessage {
@@ -17,6 +19,8 @@ function fromRow(row: any): DirectMessage {
     subject: row.subject,
     message: row.message,
     sentAt: row.sent_at,
+    attachmentUrl: row.attachment_url ?? null,
+    attachmentName: row.attachment_name ?? null,
   };
 }
 
@@ -25,6 +29,8 @@ export async function logDirectMessage(params: {
   email: string;
   subject: string;
   message: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
 }): Promise<DirectMessage> {
   const supabase = getSupabaseAdmin();
   const id = `dm-${Date.now()}`;
@@ -36,6 +42,8 @@ export async function logDirectMessage(params: {
       email: params.email,
       subject: params.subject,
       message: params.message,
+      attachment_url: params.attachmentUrl ?? null,
+      attachment_name: params.attachmentName ?? null,
     })
     .select()
     .single();

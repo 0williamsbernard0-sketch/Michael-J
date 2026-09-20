@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendAdminDirectEmail } from "@/lib/email";
-import { logDirectMessage, listDirectMessages } from "@/lib/direct-message-store";
+import { logDirectMessage, listDirectMessages } from "@/lib/direct-messages-store";
 
 function isAuthorized(req: NextRequest) {
   const secret = process.env.ADMIN_SECRET;
@@ -13,11 +13,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   try {
-    const { name, email, subject, message } = (await req.json()) as {
+    const { name, email, subject, message, attachmentUrl, attachmentName } = (await req.json()) as {
       name?: string;
       email: string;
       subject: string;
       message: string;
+      attachmentUrl?: string | null;
+      attachmentName?: string | null;
     };
     if (!email || !subject || !message) {
       return NextResponse.json(
@@ -25,8 +27,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    await sendAdminDirectEmail({ name, email, subject, message });
-    const logged = await logDirectMessage({ name, email, subject, message });
+    await sendAdminDirectEmail({ name, email, subject, message, attachmentUrl, attachmentName });
+    const logged = await logDirectMessage({ name, email, subject, message, attachmentUrl, attachmentName });
     return NextResponse.json({ ok: true, message: logged });
   } catch (err) {
     console.error("Failed to send direct admin email:", err);

@@ -2,6 +2,7 @@ export const ANNUAL_PRICE_USD = 100;
 
 const PROMO_CODES: Record<string, number> = {
   MD07: 60, // percent off
+  MD03: 50,//  percent off
 };
 
 export function getPrice(code?: string) {

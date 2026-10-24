@@ -1,31 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAwaitingPayment } from "@/lib/admin-store";
+import { getPrice } from "@/lib/promo";
 
 /**
  * Creates a NOWPayments invoice for the single MBJ Society plan:
- * $100 USD, billed annually. There is no monthly option — do not add
- * a `plan` param that changes the price without updating this file
- * intentionally.
+ * $100 USD, billed annually (less any valid promo code, e.g. MD101 = 60% off).
+ * The price is always calculated here on the server from lib/promo.ts,
+ * never taken from the client.
  *
  * Env vars required (set in .env.local / your hosting provider):
  *   NOWPAYMENTS_API_KEY   — from your NOWPayments dashboard
  *   NEXT_PUBLIC_SITE_URL  — e.g. https://mbjsociety.com
- *
- * If you already have working NOWPayments invoice-creation code from
- * MBJ Signature, you can drop it in here in place of the fetch
- * call below — keep the request/response shape the same so
- * app/signup/page.tsx doesn't need changes.
  */
 
 const NOWPAYMENTS_API_URL = "https://api.nowpayments.io/v1";
-const ANNUAL_PRICE_USD = 100;
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email } = await req.json();
+    const { name, email, promo } = await req.json();
 
     if (!email) {
       return NextResponse.json({ error: "Email is required." }, { status: 400 });
+    }
+
+    const priced = getPrice(promo);
+    if (!priced.valid) {
+      return NextResponse.json({ error: "Invalid promo code." }, { status: 400 });
     }
 
     const apiKey = process.env.NOWPAYMENTS_API_KEY;
@@ -46,10 +46,12 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        price_amount: ANNUAL_PRICE_USD,
+        price_amount: priced.price,
         price_currency: "usd",
         order_id: orderId,
-        order_description: `MBJ Society — Annual Membership (${email})`,
+        order_description: `MBJ Society — Annual Membership (${email})${
+          priced.code ? ` [promo ${priced.code}]` : ""
+        }`,
         success_url: `${siteUrl}/account?payment=success`,
         cancel_url: `${siteUrl}/signup?payment=cancelled`,
         ipn_callback_url: `${siteUrl}/api/nowpayments/webhook`,

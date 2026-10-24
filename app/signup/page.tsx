@@ -178,6 +178,12 @@ export default function SignupPage() {
                       setPromoMsg(null);
                     }
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void applyPromo();
+                    }
+                  }}
                   className="flex-1 rounded-md bg-[#161A20] border border-white/10 px-4 py-3 text-sm uppercase"
                   placeholder="Enter code"
                 />

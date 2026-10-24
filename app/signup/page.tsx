@@ -60,16 +60,25 @@ export default function SignupPage() {
       setError("Password must be at least 8 characters.");
       return;
     }
+    if (promoInput.trim() && !promo) {
+      setError("Tap Apply to use your promo code, or clear the box.");
+      return;
+    }
 
     setLoading(true);
+    const supabase = getSupabaseBrowser();
     try {
-      // Step 1: create the real Supabase Auth user first.
-      const supabase = getSupabaseBrowser();
+      // Step 1: create the Supabase Auth user.
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { name } },
       });
+
+      // Supabase may start a session on sign-up. A new user must NEVER be
+      // logged in until they've paid and an admin has approved them, so
+      // always end any session right away.
+      await supabase.auth.signOut();
 
       if (signUpError) {
         setError(signUpError.message);
@@ -92,8 +101,10 @@ export default function SignupPage() {
         return;
       }
 
+      // Step 3: send them to pay. They stay logged out.
       window.location.href = data.invoice_url;
     } catch (err) {
+      await supabase.auth.signOut();
       setError("Something went wrong. Please try again.");
       setLoading(false);
     }

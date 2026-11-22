@@ -1,10 +1,11 @@
 // app/api/messages/reply/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getSupabaseServer } from "@/lib/supabase-server";
+import { setTicketStatus } from "@/lib/support-store";
 
 export async function POST(req: NextRequest) {
-  // Identify the logged-in member from their session cookie
   const supabaseAuth = await getSupabaseServer();
   const {
     data: { user },
@@ -31,8 +32,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
-    // Confirm this thread actually belongs to the requesting member before
-    // letting them post into it.
+    // Confirm this thread belongs to the requesting member
     const { data: existing, error: fetchErr } = await supabase
       .from("messages")
       .select("email, subject, source")
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
         sender: "user",
         subject: existing.subject,
         body: body?.trim() ?? "",
-        read: true,
+        read: false, // unread so the admin side flags it as New
         source: existing.source,
         attachment_url: attachmentUrl ?? null,
         attachment_name: attachmentName ?? null,
@@ -64,6 +64,43 @@ export async function POST(req: NextRequest) {
     if (insertErr) {
       console.error("Failed to insert member reply:", insertErr);
       return NextResponse.json({ error: "Couldn't send your reply." }, { status: 500 });
+    }
+
+    // Reopen the support ticket so it shows under the admin's "Open" filter
+    if (existing.source === "support") {
+      try {
+        await setTicketStatus(proposalId, "open");
+      } catch (e) {
+        console.error("Failed to reopen ticket:", e);
+      }
+    }
+
+    // Notify the admin by email. Failure here never blocks the member's reply.
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL;
+      const from = process.env.RESEND_FROM;
+      if (adminEmail && from && process.env.RESEND_API_KEY) {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const { error: mailErr } = await resend.emails.send({
+          from,
+          to: adminEmail,
+          replyTo: user.email,
+          subject: `New reply from ${user.email}: ${existing.subject}`,
+          text: [
+            `${user.email} replied to "${existing.subject}":`,
+            "",
+            body?.trim() || "(attachment only)",
+            attachmentUrl ? `\nAttachment: ${attachmentUrl}` : "",
+            "",
+            `${process.env.SITE_URL ?? ""}/admin/support`,
+          ].join("\n"),
+        });
+        if (mailErr) console.error("Admin notify failed:", mailErr);
+      } else {
+        console.error("Admin notify skipped: missing ADMIN_EMAIL, RESEND_FROM or RESEND_API_KEY");
+      }
+    } catch (e) {
+      console.error("Admin notify error:", e);
     }
 
     return NextResponse.json({ ok: true, message: inserted });

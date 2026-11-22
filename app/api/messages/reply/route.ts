@@ -1,9 +1,9 @@
 // app/api/messages/reply/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getSupabaseServer } from "@/lib/supabase-server";
 import { setTicketStatus } from "@/lib/support-store";
+import { sendAdminMemberReplyNotification } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const supabaseAuth = await getSupabaseServer();
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
         sender: "user",
         subject: existing.subject,
         body: body?.trim() ?? "",
-        read: false, // unread so the admin side flags it as New
+        read: false,
         source: existing.source,
         attachment_url: attachmentUrl ?? null,
         attachment_name: attachmentName ?? null,
@@ -75,33 +75,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Notify the admin by email. Failure here never blocks the member's reply.
-    try {
-      const adminEmail = process.env.ADMIN_EMAIL;
-      const from = process.env.RESEND_FROM;
-      if (adminEmail && from && process.env.RESEND_API_KEY) {
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        const { error: mailErr } = await resend.emails.send({
-          from,
-          to: adminEmail,
-          replyTo: user.email,
-          subject: `New reply from ${user.email}: ${existing.subject}`,
-          text: [
-            `${user.email} replied to "${existing.subject}":`,
-            "",
-            body?.trim() || "(attachment only)",
-            attachmentUrl ? `\nAttachment: ${attachmentUrl}` : "",
-            "",
-            `${process.env.SITE_URL ?? ""}/admin/support`,
-          ].join("\n"),
-        });
-        if (mailErr) console.error("Admin notify failed:", mailErr);
-      } else {
-        console.error("Admin notify skipped: missing ADMIN_EMAIL, RESEND_FROM or RESEND_API_KEY");
-      }
-    } catch (e) {
-      console.error("Admin notify error:", e);
-    }
+    // Email the admin (the helper never throws, so it can't block the reply)
+    await sendAdminMemberReplyNotification({
+      memberEmail: user.email,
+      subject: existing.subject,
+      body: body?.trim() ?? "",
+      attachmentUrl,
+      attachmentName,
+    });
 
     return NextResponse.json({ ok: true, message: inserted });
   } catch (err) {

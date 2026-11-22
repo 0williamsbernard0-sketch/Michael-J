@@ -1,7 +1,7 @@
 export const ANNUAL_PRICE_USD = 100;
 
 const PROMO_CODES: Record<string, number> = {
-  MD07: 70, // percent off
+  MDM8: 70, // percent off
   MD03: 25,//  percent off
 };
 

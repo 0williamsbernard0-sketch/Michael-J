@@ -164,6 +164,54 @@ export async function sendAdminDirectEmail(params: {
   });
 }
 
+export async function sendAdminMemberReplyNotification(params: {
+  memberEmail: string;
+  subject: string;
+  body: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
+}) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const fromAddress = process.env.EMAIL_FROM || "onboarding@resend.dev";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+  if (!adminEmail) {
+    console.error("ADMIN_EMAIL is not set — skipping member reply notification.");
+    return;
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: fromAddress,
+      to: adminEmail,
+      replyTo: params.memberEmail,
+      subject: `New member reply — ${params.subject}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px;">
+          <h2 style="color: #12151A;">New reply from a member</h2>
+          <p><strong>From:</strong> ${escapeHtml(params.memberEmail)}</p>
+          <p><strong>Thread:</strong> ${escapeHtml(params.subject)}</p>
+          <div style="background:#F5F5F5;border-left:3px solid #C9A227;padding:12px 16px;margin:16px 0;white-space:pre-wrap;">${escapeHtml(params.body || "(attachment only)")}</div>
+          ${
+            params.attachmentUrl
+              ? `<p><a href="${params.attachmentUrl}" style="color:#C9A227;text-decoration:none;">📎 ${escapeHtml(params.attachmentName ?? "View attachment")}</a></p>`
+              : ""
+          }
+          <p style="margin-top: 24px;">
+            <a href="${siteUrl}/admin/support"
+               style="background:#C9A227;color:#12151A;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600;">
+              Open Support Tickets
+            </a>
+          </p>
+        </div>
+      `,
+    });
+    if (error) console.error("Member reply notification failed:", error);
+  } catch (err) {
+    console.error("Failed to send member reply notification:", err);
+  }
+}
+
 function escapeHtml(str: string) {
   return str
     .replace(/&/g, "&amp;")

@@ -5,6 +5,15 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import { uploadAdminAttachment } from "@/lib/admin-attachment-upload";
 
+interface FollowUp {
+  id: string;
+  body: string;
+  createdAt: string;
+  attachmentUrl: string | null;
+  attachmentName: string | null;
+  isNew: boolean;
+}
+
 interface SupportTicket {
   id: string;
   name: string;
@@ -18,6 +27,7 @@ interface SupportTicket {
   isMember: boolean;
   replyAttachmentUrl?: string | null;
   replyAttachmentName?: string | null;
+  followUps?: FollowUp[];
 }
 
 interface DirectMessage {
@@ -148,7 +158,12 @@ export default function AdminSupportPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setTickets((prev) => prev.map((t) => (t.id === id ? data.ticket : t)));
+        // Keep the follow-ups we already loaded; the reply route doesn't return them
+        setTickets((prev) =>
+          prev.map((t) =>
+            t.id === id ? { ...data.ticket, followUps: t.followUps ?? [] } : t
+          )
+        );
         setReplyDrafts((prev) => ({ ...prev, [id]: "" }));
         setReplyFiles((prev) => ({ ...prev, [id]: null }));
       } else {
@@ -471,6 +486,11 @@ export default function AdminSupportPage() {
                           Not a Member
                         </span>
                       )}
+                      {t.followUps?.some((f) => f.isNew) && (
+                        <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#C9A227] text-[#12151A] font-semibold">
+                          New reply
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-[#B8B2A2] mt-0.5">
                       {t.name} · {t.email}
@@ -511,6 +531,38 @@ export default function AdminSupportPage() {
                         📎 {t.replyAttachmentName ?? "View attachment"}
                       </a>
                     )}
+                  </div>
+                )}
+
+                {t.followUps && t.followUps.length > 0 && (
+                  <div className="space-y-2 mb-4">
+                    <p className="text-[10px] uppercase tracking-wider text-[#C9A227]">
+                      Member Follow-ups
+                    </p>
+                    {t.followUps.map((f) => (
+                      <div
+                        key={f.id}
+                        className="rounded-md border border-[#C9A227]/40 bg-[#12151A] p-3"
+                      >
+                        <p className="text-[10px] uppercase tracking-wider text-[#B8B2A2] mb-1">
+                          {t.name} · {new Date(f.createdAt).toLocaleString()}
+                          {f.isNew && (
+                            <span className="ml-2 text-[#C9A227] font-semibold">New</span>
+                          )}
+                        </p>
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{f.body}</p>
+                        {f.attachmentUrl && (
+                          <a
+                            href={f.attachmentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block mt-2 text-xs text-[#C9A227] underline"
+                          >
+                            📎 {f.attachmentName ?? "View attachment"}
+                          </a>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
 
